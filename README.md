@@ -109,7 +109,10 @@ Os diagramas UML (Casos de Uso, Classes, Componentes) e as Histórias de Usuári
 ```bash
 git clone [https://github.com/SEU_USUARIO/sistema-moeda-estudantil.git](https://github.com/SEU_USUARIO/sistema-moeda-estudantil.git)
 cd sistema-moeda-estudantil
-├──
+```
+
+2. **Estrutura de Pastas:**
+```
 sistema-moeda-estudantil/
 ├── docs/                      # 📚 Diagramas UML e documentação da Sprint 01
 │   └── uml/                   # Diagramas de Caso de Uso, Classes e Componentes
@@ -124,3 +127,4 @@ sistema-moeda-estudantil/
 │   │   ├── model/             # Entidades de Domínio (Usuario, Aluno, Instituicao)
 │   │   └── repository/        # Comunicação com o banco de dados
 └── README.md
+```
