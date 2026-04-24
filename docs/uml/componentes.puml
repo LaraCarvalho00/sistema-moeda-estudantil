@@ -1,0 +1,29 @@
+@startuml componentes_arquitetura
+!theme plain
+skinparam linetype ortho
+
+title Sistema de Moeda Estudantil — componentes lógicos
+
+[Cliente web] as C <<Browser>>
+package "Aplicação servidora (Spring Boot)" {
+  [REST /api/v1] as Rest
+  [Aplicação + domínio] as App
+  [Persistência e integrações] as Inf
+  Rest -d- App
+  App -d- Inf
+}
+database "PostgreSQL" as DB
+cloud "SMTP (opcional)" as Mail
+
+C -d- Rest : HTTPS\n(JSON + JWT)
+Inf -d- DB
+Inf -r- Mail
+
+note right of C
+  **Desenvolvimento:** Vite em :5173 com
+  *proxy* de ``/api`` -> :8080. Em
+  produção, mesmo domínio ou
+  *reverse proxy* / ``VITE_API_BASE``.
+end note
+
+@enduml

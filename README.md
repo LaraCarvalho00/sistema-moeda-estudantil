@@ -1,130 +1,220 @@
-<a href="#"><img src="https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg" width="200"/></a> <a href="#"><img src="https://classroom.github.com/assets/launch-codespace-2972f46106e565e64193e422d61a12cf1da4916b45550586e14ef0a7c637dd04.svg" width="250"/></a>
+# Sistema de Moeda Estudantil
+
+Monorepo de **API REST (Spring Boot)** + **SPA (React, Vite)** com **PostgreSQL**, voltado a disciplina de laboratório de software: moedas virtuais emitidas por professores, resgate de vantagens por alunos e cadastro por parceiros, com autenticação JWT e e-mail opcional (JavaMail).
 
 ---
 
-# 🪙 Sistema de Moeda Estudantil 👨‍💻
+## Conteúdo
 
-> [!NOTE]
-> Sistema de mérito estudantil para distribuição de moedas virtuais por professores e troca por benefícios em empresas parceiras.  
-> **Foco:** Estimular o engajamento acadêmico e recompensar o bom comportamento através de uma economia virtual gamificada.
-
-<table>
-  <tr>
-    <td width="800px">
-      <div align="justify">
-        Este <b>README.md</b> documenta o desenvolvimento do <b>Sistema de Moeda Estudantil</b> (Release 1), concebido para a disciplina de Laboratório de Desenvolvimento de Software. O projeto adota a <b>Arquitetura MVC</b> e implementa um ecossistema completo onde alunos, professores e empresas parceiras interagem. O objetivo deste repositório é apresentar não apenas o código final desenvolvido, mas também toda a documentação UML produzida na <i>Sprint 01</i>, garantindo o alinhamento entre os modelos conceituais e a implementação prática.
-      </div>
-    </td>
-    <td>
-      <div align="center">
-        <img src="https://joaopauloaramuni.github.io/image/logo_ES_vertical.png" alt="Logo do Projeto" width="120px"/>
-      </div>
-    </td>
-  </tr> 
-</table>
+| # | Seção |
+|---|--------|
+| 1 | [Visão geral e escopo](#1-visão-geral-e-escopo) |
+| 2 | [Stack e versões](#2-stack-e-versões) |
+| 3 | [Arquitetura do backend](#3-arquitetura-do-backend) |
+| 4 | [Front-end](#4-front-end) |
+| 5 | [Estrutura do repositório](#5-estrutura-do-repositório) |
+| 6 | [Requisitos e portas](#6-requisitos-e-portas) |
+| 7 | [Execução local](#7-execução-local) |
+| 8 | [Variáveis de ambiente](#8-variáveis-de-ambiente) |
+| 9 | [API HTTP](#9-api-http) |
+| 10 | [Segurança e autenticação](#10-segurança-e-autenticação) |
+| 11 | [Documentação de análise (UML)](#11-documentação-de-análise-uml) |
+| 12 | [Git: commits e sprints](#12-git-commits-e-sprints) |
+| 13 | [Autores e licença](#13-autores-e-licença) |
 
 ---
 
-## 🚧 Status do Projeto
+## 1. Visão geral e escopo
 
-[![Status](https://img.shields.io/badge/Status-Em%20Desenvolvimento%20(Sprint%2001)-green)](#)
-[![Versão](https://img.shields.io/badge/Versão-v1.0.0-blue)](#)
-![Java](https://img.shields.io/badge/Java-17-007ec6?style=flat&logo=openjdk&logoColor=white) 
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-007ec6?style=flat&logo=springboot&logoColor=white) 
-![React](https://img.shields.io/badge/React-18-007ec6?style=flat&logo=react&logoColor=white)
+**Domínio:** instituição de ensino, professores, alunos e parceiros comerciais. Professores recebem crédito semestral (regra de negócio: 1.000 moedas / semestre) e transferem saldo a alunos com justificativa obrigatória. Alunos resgatam vantagens (custo em moedas); o sistema persiste transações, gera identificador de resgate (cupom) e pode notificar por e-mail conforme configuração.
 
----
+**Entregas do repositório:** código (backend/frontend), `docker-compose` para banco de desenvolvimento, histórias e artefatos em `docs/uml`.
 
-## 📚 Índice
-- [Sobre o Projeto](#-sobre-o-projeto)
-- [Funcionalidades Principais](#-funcionalidades-principais)
-- [Tecnologias Utilizadas](#-tecnologias-utilizadas)
-- [Arquitetura](#-arquitetura)
-- [Instalação e Execução](#-instalação-e-execução)
-- [Estrutura de Pastas](#-estrutura-de-pastas)
-- [Autores](#-autores)
-- [Licença](#-licença)
+**Fronteiras do sistema (macro):** a SPA consome somente a API; não há lógica de negócio duplicada no client além de validação de formulário e chamadas agregadas em fachadas TypeScript em `frontend/src/api/`.
 
 ---
 
-## 📝 Sobre o Projeto
-O **Sistema de Moeda Estudantil** foi criado para solucionar a falta de incentivos tangíveis no ambiente acadêmico. Ele permite que instituições de ensino adotem uma moeda virtual distribuída pelos professores como forma de reconhecer o mérito de alunos (por bom comportamento, participação, etc.). 
+## 2. Stack e versões
 
-Os alunos, por sua vez, podem acumular essas moedas e trocá-las por produtos ou descontos oferecidos por empresas parceiras previamente cadastradas (como restaurantes, lojas de materiais, etc.). O sistema gerencia saldos, gera cupons de troca e emite notificações por e-mail para garantir a segurança das transações.
+| Camada | Tecnologia |
+|--------|------------|
+| runtime API | Java 17 |
+| framework server | Spring Boot 3.2.x |
+| persistência | Spring Data JPA, Hibernate, PostgreSQL |
+| segurança | Spring Security (stateless), JWT (biblioteca jjwt) |
+| e-mail | Spring `JavaMailSender` (desligável por configuração) |
+| client | React 18, TypeScript |
+| build client | Vite 5, Tailwind CSS 3 |
+| banco (dev) | `postgres:16-alpine` via Docker Compose |
 
----
-
-## ✨ Funcionalidades Principais
-- 🔐 **Cadastro e Autenticação:** Login exclusivo e seguro para Alunos, Professores e Empresas Parceiras.
-- 💰 **Gestão de Saldo (Professores):** Recebimento semestral automático de 1.000 moedas, com saldo cumulativo.
-- 🎁 **Distribuição de Mérito:** Envio de moedas aos alunos acompanhado de uma mensagem obrigatória de justificativa.
-- 📊 **Extrato de Conta:** Consulta de transações em tempo real para alunos (recebimentos/trocas) e professores (envios).
-- 🛍️ **Marketplace de Vantagens:** Empresas parceiras podem cadastrar produtos/descontos com foto, descrição e custo em moedas.
-- 🎟️ **Resgate e Cupons:** Alunos trocam moedas por vantagens, gerando abatimento de saldo e envio de cupons via e-mail.
-- 📨 **Notificações Automatizadas:** Alertas de recebimento de moedas e e-mails de conferência para parceiros e alunos durante as trocas.
-
----
-
-## 🛠 Tecnologias Utilizadas
-
-A solução foi projetada separando o Front-end e o Back-end, obedecendo ao padrão MVC exigido.
-
-### 💻 Front-end (View)
-* **Framework:** React v18
-* **Estilização:** Tailwind CSS
-* **Build Tool:** Vite
-
-### 🖥️ Back-end (Model & Controller)
-* **Linguagem:** Java 17
-* **Framework:** Spring Boot 3.x
-* **Banco de Dados:** PostgreSQL
-* **ORM:** Hibernate/Spring Data JPA
-* **Autenticação:** Spring Security + JWT
-* **Envio de Emails:** JavaMailSender
+**Indicadores (opcional em CI):** ![Java](https://img.shields.io/badge/Java-17-437291?logo=openjdk) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?logo=springboot) ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
 
 ---
 
-## 🏗 Arquitetura
+## 3. Arquitetura do backend
 
-O sistema utiliza a **Arquitetura MVC (Model-View-Controller)**:
-- **Model:** Entidades mapeadas via JPA (Aluno, Professor, Vantagem, Transação) e regras de negócio encapsuladas nos `Services`.
-- **View:** Interface desenvolvida em React, consumindo as rotas RESTful.
-- **Controller:** Controladores REST no Spring Boot gerenciando as requisições HTTP e validando os dados.
+Organização em pacotes sob `com.moedaestudantil`:
 
-### Modelagem do Sistema (Lab03S01)
-Os diagramas UML (Casos de Uso, Classes, Componentes) e as Histórias de Usuário estão localizados na pasta `/docs/uml` deste repositório.
+| Camada | Responsabilidade |
+|--------|------------------|
+| `domain` | Modelo de domínio, portas (interfaces) para persistência e serviços externos |
+| `application` | Casos de uso, fachadas (`AutenticacaoFachada`, `TransacaoFachada`, etc.), fábricas (`TransacaoFabrica`), strategies de notificação, fluxo de resgate (Template Method) |
+| `infrastructure` | Adapters JPA, segurança JWT, integração e-mail, seed opcional de dados |
+| `web` | Controllers REST, DTOs de borda, tratamento global de exceções |
+
+**Princípios explícitos:** separação domínio / aplicação / infraestrutura, dependência das implementações apontando para o núcleo (portas), DTOs na borda HTTP.
 
 ---
 
-## 🔧 Instalação e Execução
+## 4. Front-end
 
-### Pré-requisitos
-* **Java JDK:** 17 ou superior
-* **Node.js:** v18.x LTS ou superior
-* **PostgreSQL** rodando localmente na porta 5432.
+- **Estrutura por feature** em `frontend/src/features` (auth, extrato, vantagens, envio de moedas).
+- **Fachada HTTP** em `frontend/src/api` (`*Fachada.ts`): uma função de alto nível por agregado, abstraindo `fetch` e o header `Authorization`.
+- **Proxy de desenvolvimento** em [frontend/vite.config.ts](frontend/vite.config.ts): requisições a `/api` encaminhadas a `http://localhost:8080` (evita CORS no dia a dia com um único origin no browser em dev).
 
-### 📦 Clonando e Executando
+**Build de produção:** `npm run build` gera `frontend/dist`. Se API e arquivos estáticos forem publicados em hosts diferentes, defina `VITE_API_BASE` apontando para a URL pública da API (veja tabela de variáveis abaixo).
 
-1. **Clone o Repositório:**
-```bash
-git clone [https://github.com/SEU_USUARIO/sistema-moeda-estudantil.git](https://github.com/SEU_USUARIO/sistema-moeda-estudantil.git)
-cd sistema-moeda-estudantil
-```
+---
 
-2. **Estrutura de Pastas:**
+## 5. Estrutura do repositório
+
 ```
 sistema-moeda-estudantil/
-├── docs/                      # 📚 Diagramas UML e documentação da Sprint 01
-│   └── uml/                   # Diagramas de Caso de Uso, Classes e Componentes
-├── frontend/                  # 💻 Camada VIEW (React + Vite)
-│   ├── src/
-│   │   ├── components/        # Componentes visuais
-│   │   ├── pages/             # Telas da aplicação (Login, Dashboard, Extrato)
-│   │   └── services/          # Integração HTTP com a API
-├── backend/                   # ⚙️ Camada MODEL e CONTROLLER (Spring Boot)
-│   ├── src/main/java/mvc/
-│   │   ├── controller/        # Endpoints REST (Auth, Transacao, Vantagem)
-│   │   ├── model/             # Entidades de Domínio (Usuario, Aluno, Instituicao)
-│   │   └── repository/        # Comunicação com o banco de dados
-└── README.md
+├── backend/
+│   ├── pom.xml
+│   ├── .env.example
+│   └── src/main/java/com/moedaestudantil/
+│       ├── MoedaEstudantilApplication.java
+│       ├── domain/
+│       ├── application/
+│       ├── infrastructure/
+│       └── web/
+├── frontend/
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── src/              # app, features, api
+├── docs/uml/             # histórias de usuário, diagramas
+└── docker-compose.yml    # Postgres 16 (dev)
 ```
+
+---
+
+## 6. Requisitos e portas
+
+| Componente | Versão / nota | Porta padrão |
+|------------|----------------|--------------|
+| JDK | 17+ | — |
+| Maven | 3.8+ (ou IDE com import do `pom.xml`) | — |
+| Node.js | 18 LTS+ | — |
+| PostgreSQL | 14+ (compatível com driver atual) | **5432** |
+| API Spring | — | **8080** (`PORT` configurável) |
+| Vite (dev) | — | **5173** |
+
+Credenciais padrão do Compose: usuário `moeda`, senha `moeda`, database `moeda` ([docker-compose.yml](docker-compose.yml)).
+
+---
+
+## 7. Execução local
+
+**Ordem recomendada:** banco → API → client.
+
+1. **Banco**
+   - `docker compose up -d` na raiz, **ou**
+   - instância PostgreSQL local; ajuste `DATABASE_URL`, `DATABASE_USER`, `DATABASE_PASSWORD` para o seu cluster.
+
+2. **API** (diretório `backend`):
+   ```bash
+   mvn spring-boot:run
+   ```
+   Verifique health: `GET http://localhost:8080/api/v1/instituicoes` (rota pública, lista vazia ou com dados iniciais).
+
+3. **Client** (diretório `frontend`):
+   ```bash
+   npm install
+   npm run dev
+   ```
+   Aplicação: `http://localhost:5173` (proxy ativo para `/api` → `http://localhost:8080`).
+
+4. **Produção (front only):**
+   ```bash
+   cd frontend && npm run build
+   ```
+   Sirva `dist/` com Nginx ou estático; configure `VITE_API_BASE` no build se a API estiver noutro origin.
+
+O Spring **não** lê arquivos `.env` do disco por padrão. Variáveis devem ser exportadas no shell, definidas na run configuration da IDE ou no ambiente de deploy.
+
+---
+
+## 8. Variáveis de ambiente
+
+Referência alinhada a [application.yaml](backend/src/main/resources/application.yaml) e [backend/.env.example](backend/.env.example).
+
+| Variável | Escopo | Descrição |
+|----------|--------|-----------|
+| `DATABASE_URL` | API | JDBC, ex. `jdbc:postgresql://localhost:5432/moeda` |
+| `DATABASE_USER` / `DATABASE_PASSWORD` | API | Credenciais PostgreSQL |
+| `JWT_SECRET` | API | String forte (produção); deriva chave HMAC no serviço JWT |
+| `JWT_EXPIRATION_MIN` / `app.jwt.expiration-minutes` | API | Validade do token (minutos) |
+| `MAIL_ENABLED` | API | `true` ativa envio; exige SMTP válido |
+| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` | API | Parâmetros SMTP |
+| `PORT` | API | Porta do servidor (default 8080) |
+| `VITE_API_BASE` | build front | Base URL da API; vazio = mesma origem (útil com proxy) |
+
+Em produção: rotacione `JWT_SECRET`, desative `show-sql` e defina `ddl-auto` apropriado (não usar `update` sem controle de migração).
+
+---
+
+## 9. API HTTP
+
+Rotas de referência; prefixo: **`/api/v1`**. Código-fonte: pacote `com.moedaestudantil.web`.
+
+| Recurso (HTTP) | Acesso / papel | Observação |
+|----------------|----------------|------------|
+| `GET /api/v1/instituicoes` | Público | Lista para cadastro |
+| `POST /api/v1/auth/registrar` · `POST /api/v1/auth/entrar` | Público | Resposta com `accessToken` (JWT) |
+| `GET /api/v1/auth/eu` | Autenticado | Sessão atual |
+| `GET /api/v1/professores/meu-saldo` | `PROFESSOR` | Crédito semestral consolidado na leitura |
+| `POST /api/v1/professores/enviar-moedas` | `PROFESSOR` | JSON: `alunoId`, `quantidade`, `mensagemJustificativa` |
+| `GET /api/v1/alunos-na-mesma-institucao` | `PROFESSOR` | `page`, `size`, `sort` (Spring Data) |
+| `GET /api/v1/transacoes/extrato` | `ALUNO` ou `PROFESSOR` | Extrato conforme o papel do token |
+| `GET /api/v1/vantagens` | Público | Catálogo; paginação padrão Spring |
+| Vantagens parceiro (`/api/v1/parceiro/...`) | `PARCEIRO` | Métodos: ver [ControleVantagensResgate.java](backend/src/main/java/com/moedaestudantil/web/ControleVantagensResgate.java) |
+| `POST /api/v1/alunos/resgatar-vantagem/{id}` | `ALUNO` | Débito, registro, notificação conforme regras |
+
+**Erros de regra de negócio:** tipicamente HTTP 422 (corpo com `{ "erro": "…" }` via handler global). Credenciais inválidas: 401.
+
+---
+
+## 10. Segurança e autenticação
+
+- **Mecanismo:** JWT no header `Authorization: Bearer <token>`.
+- **Filtro:** leitura do token e população do `SecurityContext` (ver `infrastructure.security`).
+- **Métodos protegidos** com `@PreAuthorize` por papel (`ALUNO`, `PROFESSOR`, `PARCEIRO` mapeados a `hasRole`).
+
+CORS: em dev o proxy do Vite reduz a necessidade de requisições cross-origin; em deploy separado, ajuste `ConfiguracaoHttpSecurity` e origens conforme o domínio público.
+
+---
+
+## 11. Documentação de análise (UML)
+
+- Histórias de usuário: [docs/uml/historias_de_usuario.md](docs/uml/historias_de_usuario.md)
+- **Diagramas em PlantUML (fonte `.puml`, exportáveis a PNG/SVG):** [docs/uml](docs/uml) — índice e instruções em [docs/uml/README.md](docs/uml/README.md) (casos de uso, domínio, componentes, portas/adaptadores, sequência envio e resgate).
+
+---
+
+## 12. Git: commits e sprints
+
+- **Padrão de assunto (Conventional Commits + rastreabilidade de sprint):**  
+  `tipo(escopo): descrição [SprintNN][USmm]`
+- Exemplos: `feat(auth): registro aluno e instituição [Sprint01][US01]`, `fix(extrato): paginação default [Sprint02][US04]`.
+- **Estratégia de branch/tag:** `sprint-0N` com merge em `main` e/ou tag `sprint-0N` no commit de entrega; evite monocommits que misturem múltiplas histórias sem rastreio.
+
+Referência: [Conventional Commits](https://www.conventionalcommits.org/).
+
+---
+
+## 13. Autores e licença
+
+**Autores:** equipe do projeto (preencher nomes, turma e repositórios, conforme exigência da disciplina).
+
+**Licença:** a definir (sugerir explicitar, ex. MIT ou licença institucional).

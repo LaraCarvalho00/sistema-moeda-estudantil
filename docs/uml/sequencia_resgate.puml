@@ -1,0 +1,30 @@
+@startuml sequencia_resgate
+!theme plain
+title US06 / US07 — Aluno resgata vantagem (visão lógica)
+
+actor "Aluno" as A
+participant "Controle\nVantagens" as C
+participant "ResgateAplicacao" as R
+participant "VantagemPort" as V
+participant "Usuario\nPersistenciaPort" as U
+participant "TransacaoPort" as T
+participant "NotificacaoEstrategiaPort" as N
+participant "Infra (JPA)" as J
+
+A -> C : POST /alunos/resgatar-vantagem/{id}
+activate C
+C -> R : resgatar(alunoId, vantId)
+activate R
+R -> V : buscar vantagem
+V -> J
+R -> U : validar saldo, definirSaldo
+R -> T : registrarResgate + cupom
+T -> J
+R -> N : notificarResgate
+N -> N : e-mail ou log
+R --> C : TransacaoResumo
+deactivate R
+C --> A : 200 + corpo
+deactivate C
+
+@enduml

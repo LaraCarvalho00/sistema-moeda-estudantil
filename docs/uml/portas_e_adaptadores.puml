@@ -1,0 +1,51 @@
+@startuml portas_hexagonal
+!theme plain
+title Portas de domínio e adaptadores (simplificado)
+
+package "Application" {
+  [AutenticacaoFachada] as AF
+  [TransacaoFachada] as TF
+  [ResgateAplicacao] as RA
+}
+
+package "Domain (portas)" <<Rectangle>> {
+  interface "UsuarioPersistenciaPort" as UP
+  interface "UsuarioDadosAcessoPort" as UA
+  interface "TransacaoPort" as TP
+  interface "VantagemPort" as VP
+  interface "InstituicaoPort" as IP
+  interface "NotificacaoEstrategiaPort" as NP
+}
+
+package "Infrastructure" {
+  [UsuarioPersistenciaAdapter] as UPA
+  [UsuarioAcessoAdapter] as UAA
+  [TransacaoAdapter] as TA
+  [VantagemAdapter] as VA
+  [InstituicaoAdapter] as IA
+  [NotificacaoAplicada] as NA
+}
+
+AF ..> UP
+AF ..> UA
+TF ..> UP
+TF ..> TP
+TF ..> NP
+RA ..> UP
+RA ..> TP
+RA ..> VP
+RA ..> NP
+
+UPA .up.|> UP
+UAA .up.|> UA
+TA .up.|> TP
+VA .up.|> VP
+IA .up.|> IP
+NA .up.|> NP
+
+note right of UPA
+  Mapeia entidades JPA
+  <-> modelos de domínio
+end note
+
+@enduml

@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: moeda-estudantil-api
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/moeda}
+    username: ${DATABASE_USER:moeda}
+    password: ${DATABASE_PASSWORD:moeda}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:25}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp:
+        auth: false
+        starttls.enable: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:troque-esta-chave-tem-que-ter-256-bits-no-minimo-para-hs256-algoritm-exemplo-1234}
+    expiration-minutes: ${JWT_EXPIRATION_MIN:1440}
+  url:
+    api-base: ${API_BASE_URL:http://localhost:8080}
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: always

@@ -1,0 +1,29 @@
+@startuml sequencia_envio_moedas
+!theme plain
+title US03 / US07 — Professor envia moedas a aluno (visão lógica)
+
+actor "Professor" as Pro
+participant "Controle\nMoedas" as C
+participant "TransacaoFachada" as F
+participant "Usuario\nPersistenciaPort" as U
+participant "TransacaoPort" as T
+participant "NotificacaoEstrategiaPort" as N
+participant "Infra (JPA)" as J
+
+Pro -> C : POST /professores/enviar-moedas
+activate C
+C -> F : enviarMoedas(prof, aluno, q, justificativa)
+activate F
+F -> F : garantir crédito\nsemestre (US02)
+F -> U : buscar / atualizarSaldos
+U -> J : persistência
+F -> T : registrarEnvio
+T -> J : grava transação
+F -> N : notificarEnvioMoedas
+N -> N : e-mail ou log\n(MAIL_ENABLED)
+F --> C : void
+deactivate F
+C --> Pro : 200 OK
+deactivate C
+
+@enduml
