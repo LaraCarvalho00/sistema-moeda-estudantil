@@ -4,9 +4,9 @@ Arquivos `.puml` desta pasta podem ser renderizados com [PlantUML](https://plant
 
 | Arquivo | Conteúdo |
 |---------|----------|
-| [casos_de_uso.puml](casos_de_uso.puml) | Casos de uso por ator, alinhado às US01–US07 |
-| [classes_dominio.puml](classes_dominio.puml) | Modelo de domínio (valores, enums) |
-| [componentes.puml](componentes.puml) | Visão de componentes: cliente, API, DB, SMTP |
+| [casos_de_uso.puml](casos_de_uso.puml) | Casos de uso (herança de atores, include/extend), alinhado às US01–US12 |
+| [classes_dominio.puml](classes_dominio.puml) | Modelo de domínio: **15+** classes, enums, **2 abstratas**, agreg/compos, herança |
+| [componentes.puml](componentes.puml) | Visão de componentes (caixas/cores, ortogonal): cliente, API, domínio, DB, SMTP |
 | [portas_e_adaptadores.puml](portas_e_adaptadores.puml) | Portas do domínio e adaptadores de infraestrutura |
 | [sequencia_envio_moedas.puml](sequencia_envio_moedas.puml) | Sequência: envio de moedas (US03) |
 | [sequencia_resgate.puml](sequencia_resgate.puml) | Sequência: resgate de vantagem (US06) |

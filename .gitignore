@@ -5,6 +5,7 @@ target/
 dist/
 build/
 *.log
+docs/uml/plantuml.jar
 backend/.env
 frontend/.env
 frontend/.env.local
