@@ -20,13 +20,13 @@ export function MarketplacePage() {
       try {
         await carregar();
       } catch (e) {
-        setErro(e instanceof Error ? e.message : "Falha");
+        setErro(e instanceof Error ? e.message : "Falha ao carregar catálogo");
       }
     })();
   }, [carregar]);
 
   if (carregando) {
-    return <p className="text-slate-500">…</p>;
+    return <div className="flex justify-center py-10 text-gray-400">Carregando vantagens...</div>;
   }
   if (!usuario) {
     return <Navigate to="/entrar" replace />;
@@ -38,57 +38,96 @@ export function MarketplacePage() {
   async function resgatar(v: Vantagem) {
     setMsg(null);
     setErro(null);
-    if (v.custoEmMoedas > usuario.saldoMoedas) {
-      setErro("Saldo insuficiente.");
+  if (v.custoEmMoedas > (usuario?.saldoMoedas ?? 0)) {      
+    setErro("Saldo insuficiente para este resgate.");
       return;
     }
     try {
       const t = await vantagensFachada.resgatarVantagem(v.id);
-      setMsg(`Resgate concluído. Cupom: ${t.cupom ?? "—"}`);
+      setMsg(`Sucesso! Seu cupom é: ${t.cupom ?? "—"}`);
       await atualizar();
       await carregar();
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro");
+      setErro(e instanceof Error ? e.message : "Erro ao resgatar");
     }
   }
 
   return (
-    <div>
-      <h1 className="mb-4 text-2xl font-semibold">Vantagens</h1>
-      {msg && <p className="mb-2 text-emerald-400">{msg}</p>}
-      {erro && <p className="mb-2 text-rose-400">{erro}</p>}
-      <p className="mb-4 text-slate-500">Seu saldo: {usuario.saldoMoedas}</p>
-      <ul className="grid gap-4 sm:grid-cols-2">
+    <div className="max-w-4xl mx-auto space-y-8">
+      {/* Header da Vitrine */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Vantagens</h1>
+          <p className="text-gray-500">Troque suas moedas por benefícios exclusivos</p>
+        </div>
+        <div className="bg-purple-50 px-4 py-2 rounded-2xl border border-purple-100">
+          <span className="text-sm text-gray-600 font-medium">Seu saldo: </span>
+          <span className="text-lg font-bold text-[#820AD1]">{usuario.saldoMoedas} moedas</span>
+        </div>
+      </div>
+
+      {/* Alertas de Mensagem/Erro */}
+      {msg && (
+        <div className="bg-green-50 border border-green-100 text-green-700 p-4 rounded-2xl font-bold text-center animate-bounce">
+          {msg}
+        </div>
+      )}
+      {erro && (
+        <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl font-medium text-center">
+          {erro}
+        </div>
+      )}
+
+      {/* Grid de Cards */}
+      <div className="grid gap-6 sm:grid-cols-2">
         {lista.map((v) => (
-          <li
+          <div
             key={v.id}
-            className="rounded border border-slate-800 p-4 shadow"
+            className="group bg-white rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
           >
-            <h2 className="font-medium text-amber-200/90">{v.titulo}</h2>
-            <p className="mt-1 line-clamp-3 text-sm text-slate-400">
-              {v.descricao}
-            </p>
-            {v.fotoUrl && v.fotoUrl.length > 0 && (
-              <p className="text-xs text-slate-600">Foto: {v.fotoUrl}</p>
-            )}
-            <p className="mt-2 text-sm text-slate-500">
-              {v.parceiroNome} — {v.custoEmMoedas} moedas
-            </p>
-            <button
-              type="button"
-              onClick={() => resgatar(v)}
-              className="mt-2 rounded bg-emerald-600/90 px-3 py-1.5 text-sm"
-            >
-              Resgatar
-            </button>
-          </li>
+            <div>
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-xl font-bold text-gray-800 group-hover:text-[#820AD1] transition-colors">
+                  {v.titulo}
+                </h2>
+                <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-lg uppercase">
+                  {v.parceiroNome}
+                </span>
+              </div>
+              
+              <p className="text-sm text-gray-500 leading-relaxed mb-4 line-clamp-3">
+                {v.descricao}
+              </p>
+
+              {v.fotoUrl && (
+                <div className="mb-4 h-32 w-full bg-gray-50 rounded-2xl flex items-center justify-center border border-dashed border-gray-200">
+                   <span className="text-gray-300 text-xs italic">Espaço para imagem: {v.fotoUrl}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Custo</p>
+                <p className="text-lg font-black text-gray-900">{v.custoEmMoedas} moedas</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => resgatar(v)}
+                className="bg-[#820AD1] text-white px-6 py-2.5 rounded-full font-bold text-sm shadow-sm hover:bg-[#6D08B1] active:scale-95 transition-all"
+              >
+                Resgatar
+              </button>
+            </div>
+          </div>
         ))}
-      </ul>
-      <p className="mt-4">
-        <Link to="/app" className="text-amber-400/90">
-          Voltar
+      </div>
+
+      <div className="text-center pt-8">
+        <Link to="/app" className="text-sm font-bold text-gray-400 hover:text-[#820AD1] transition-colors">
+          ← Voltar ao painel
         </Link>
-      </p>
+      </div>
     </div>
   );
 }

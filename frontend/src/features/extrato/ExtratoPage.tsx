@@ -10,9 +10,7 @@ export function ExtratoPage() {
   const [erro, setErro] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
-    if (!usuario) {
-      return;
-    }
+    if (!usuario) return;
     setErro(null);
     try {
       const p = await moedasFachada.extrato(0);
@@ -26,66 +24,86 @@ export function ExtratoPage() {
     void carregar();
   }, [carregar]);
 
-  if (carregando) {
-    return <p className="text-slate-500">…</p>;
-  }
-  if (!usuario) {
-    return <Navigate to="/entrar" replace />;
-  }
-  if (erro) {
-    return <p className="text-rose-400">{erro}</p>;
-  }
+  if (carregando) return <p className="text-gray-400">Carregando extrato...</p>;
+  if (!usuario) return <Navigate to="/entrar" replace />;
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Extrato</h1>
-        <Link className="text-sm text-amber-400" to="/app">
-          Painel
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* Cabeçalho */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-900">Histórico</h1>
+        <Link 
+          className="text-sm font-bold text-[#820AD1] hover:bg-purple-50 px-3 py-1 rounded-full transition-colors" 
+          to="/app"
+        >
+          Voltar
         </Link>
       </div>
+
+      {erro && (
+        <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-medium">
+          {erro}
+        </div>
+      )}
+
       {itens.length === 0 ? (
-        <p className="text-slate-500">Nenhuma transação ainda.</p>
+        <div className="bg-white p-10 rounded-3xl text-center border border-gray-100 shadow-sm">
+          <p className="text-gray-400">Nenhuma movimentação por aqui ainda. 🌱</p>
+        </div>
       ) : (
-        <ul className="divide-y divide-slate-800 rounded border border-slate-800">
-          {itens.map((t) => (
-            <li
-              key={t.id}
-              className="flex flex-col gap-1 px-3 py-3 sm:flex-row sm:justify-between"
-            >
-              <div>
-                <span
-                  className={
-                    t.tipo === "ENVIO"
-                      ? "text-sky-400/90"
-                      : "text-emerald-400/90"
-                  }
-                >
-                  {t.tipo}
-                </span>
-                {t.cupom && (
-                  <span className="ml-2 text-xs text-slate-500">
-                    Cupom: {t.cupom}
-                  </span>
-                )}
-                <p className="text-sm text-slate-500">{t.mensagem}</p>
-                {t.contatoRelacionado && (
-                  <p className="text-xs text-slate-600">
-                    {t.contatoRelacionado}
-                  </p>
-                )}
-              </div>
-              <div className="whitespace-nowrap text-right text-slate-200">
-                {t.quantidade} moedas
-                {t.criadoEm && (
-                  <p className="text-xs text-slate-500">
-                    {new Date(t.criadoEm).toLocaleString("pt-BR")}
-                  </p>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <ul className="divide-y divide-gray-50">
+            {itens.map((t) => (
+              <li
+                key={t.id}
+                className="flex items-center gap-4 px-6 py-5 hover:bg-gray-50 transition-colors"
+              >
+                {/* Ícone Indicador de Entrada/Saída */}
+                <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
+                  t.tipo === "ENVIO" ? "bg-blue-50 text-blue-600" : "bg-green-50 text-green-600"
+                }`}>
+                  {t.tipo === "ENVIO" ? "↑" : "↓"}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">
+                        {t.tipo === "ENVIO" ? "Transferência enviada" : "Moedas recebidas"}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {t.contatoRelacionado || "Sistema Estudantil"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-sm font-bold ${
+                        t.tipo === "ENVIO" ? "text-gray-900" : "text-green-600"
+                      }`}>
+                        {t.tipo === "ENVIO" ? `-${t.quantidade}` : `+${t.quantidade}`} moedas
+                      </p>
+                      <p className="text-[10px] text-gray-400 uppercase font-semibold">
+                        {t.criadoEm && new Date(t.criadoEm).toLocaleDateString("pt-BR", { day: '2-digit', month: 'short' })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Mensagem da transação */}
+                  {t.mensagem && (
+                    <div className="mt-2 p-2 bg-gray-50 rounded-lg border-l-2 border-gray-200">
+                      <p className="text-xs italic text-gray-600">"{t.mensagem}"</p>
+                    </div>
+                  )}
+
+                  {t.cupom && (
+                    <p className="mt-1 text-[10px] font-mono font-bold text-[#820AD1]">
+                      CUPOM: {t.cupom}
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );
