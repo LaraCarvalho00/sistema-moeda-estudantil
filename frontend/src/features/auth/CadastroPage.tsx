@@ -34,8 +34,7 @@ export function CadastroPage() {
     e.preventDefault();
     setErro(null);
     try {
-      const instId =
-        perfil === "PARCEIRO" ? null : form.instituicaoId;
+      const instId = perfil === "PARCEIRO" ? null : form.instituicaoId;
       if (perfil !== "PARCEIRO" && !instId) {
         setErro("Selecione uma instituição.");
         return;
@@ -54,14 +53,19 @@ export function CadastroPage() {
     }
   }
 
+  // Classe padrão para nossos inputs "Nubank Style"
+  const inputClasses = "mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition-all focus:border-[#820AD1] focus:ring-1 focus:ring-[#820AD1] placeholder:text-gray-400";
+
   return (
     <div className="mx-auto max-w-md">
-      <h1 className="mb-6 text-2xl font-semibold">Cadastro</h1>
-      <form onSubmit={onSubmit} className="space-y-4">
-        <label className="block text-sm text-slate-400">
-          Tipo
+      {/* Título mais forte e escuro */}
+      <h1 className="mb-8 text-3xl font-bold text-gray-900">Crie sua conta</h1>
+      
+      <form onSubmit={onSubmit} className="space-y-5 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+        <label className="block text-sm font-bold text-gray-600">
+          Você é...
           <select
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2"
+            className={inputClasses}
             value={perfil}
             onChange={(e) => setPerfil(e.target.value as TipoPerfil)}
           >
@@ -72,11 +76,12 @@ export function CadastroPage() {
             ))}
           </select>
         </label>
+
         {perfil !== "PARCEIRO" && inst.length > 0 && (
-          <label className="block text-sm text-slate-400">
-            Instituição
+          <label className="block text-sm font-bold text-gray-600">
+            Sua Instituição
             <select
-              className="mt-1 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2"
+              className={inputClasses}
               value={form.instituicaoId}
               onChange={(e) =>
                 setForm((f) => ({
@@ -93,47 +98,61 @@ export function CadastroPage() {
             </select>
           </label>
         )}
-        <label className="block text-sm text-slate-400">
-          Nome
+
+        <label className="block text-sm font-bold text-gray-600">
+          Nome completo
           <input
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2"
+            className={inputClasses}
+            placeholder="Ex: Lara Carvalho"
             value={form.nome}
             onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
             required
           />
         </label>
-        <label className="block text-sm text-slate-400">
+
+        <label className="block text-sm font-bold text-gray-600">
           E-mail
           <input
             type="email"
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2"
+            className={inputClasses}
+            placeholder="seu@email.com"
             value={form.email}
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             required
           />
         </label>
-        <label className="block text-sm text-slate-400">
+
+        <label className="block text-sm font-bold text-gray-600">
           Senha
           <input
             type="password"
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2"
+            className={inputClasses}
+            placeholder="Mínimo 4 caracteres"
             value={form.senha}
             onChange={(e) => setForm((f) => ({ ...f, senha: e.target.value }))}
             required
             minLength={4}
           />
         </label>
-        {erro && <p className="text-sm text-rose-400">{erro}</p>}
+
+        {erro && (
+          <div className="rounded-lg bg-red-50 p-3">
+            <p className="text-sm font-medium text-red-600">{erro}</p>
+          </div>
+        )}
+
         <button
           type="submit"
-          className="w-full rounded bg-amber-500 py-2 font-medium text-slate-950"
+          className="w-full rounded-full bg-[#820AD1] py-3.5 font-bold text-white shadow-md transition-all hover:bg-[#6D08B1] active:scale-95"
         >
-          Criar conta
+          Finalizar cadastro
         </button>
       </form>
-      <p className="mt-4 text-center text-sm text-slate-500">
-        <Link className="text-amber-400" to="/entrar">
-          Já tenho conta
+
+      <p className="mt-6 text-center text-sm font-medium text-gray-500">
+        Já tem uma conta?{" "}
+        <Link className="text-[#820AD1] hover:underline font-bold" to="/entrar">
+          Fazer login
         </Link>
       </p>
     </div>

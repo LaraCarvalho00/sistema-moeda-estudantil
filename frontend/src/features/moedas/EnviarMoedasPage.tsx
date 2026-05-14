@@ -39,7 +39,7 @@ export function EnviarMoedasPage() {
   }, [recarregar, usuario?.perfil]);
 
   if (carregando) {
-    return <p className="text-slate-500">…</p>;
+    return <p className="text-gray-400">Carregando…</p>;
   }
   if (!usuario) {
     return <Navigate to="/entrar" replace />;
@@ -56,7 +56,7 @@ export function EnviarMoedasPage() {
       return;
     }
     if (!justificativa.trim()) {
-      setErro("Justificativa é obrigatória (US03).");
+      setErro("Justificativa é obrigatória.");
       return;
     }
     try {
@@ -69,72 +69,84 @@ export function EnviarMoedasPage() {
       setQ(1);
       await recarregar();
       await atualizar();
+      alert("Moedas enviadas com sucesso! 🎉");
     } catch (e2) {
       setErro(e2 instanceof Error ? e2.message : "Erro");
     }
   }
 
-  return (
-    <div>
-      <h1 className="mb-2 text-2xl font-semibold">Enviar moedas</h1>
-      {saldoProf != null && (
-        <p className="text-slate-500">
-          Saldo disponível:{" "}
-          <span className="text-amber-300/90">{saldoProf}</span> (crédito
-          automático 1000 / semestre, US02)
-        </p>
-      )}
-      {erro && <p className="text-rose-400">{erro}</p>}
+  const inputClasses = "mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition-all focus:border-[#820AD1] focus:ring-1 focus:ring-[#820AD1]";
 
-      <form onSubmit={enviar} className="mt-4 max-w-md space-y-3">
-        <label className="block text-sm text-slate-400">
-          Aluno
+  return (
+    <div className="mx-auto max-w-lg space-y-6">
+      <header>
+        <h1 className="text-3xl font-bold text-gray-900">Transferir moedas</h1>
+        {saldoProf != null && (
+          <p className="text-gray-500 mt-2">
+            Seu saldo para distribuição: <span className="font-bold text-[#820AD1]">{saldoProf} moedas</span>
+          </p>
+        )}
+      </header>
+
+      {erro && (
+        <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-2xl text-sm font-medium">
+          ⚠️ {erro}
+        </div>
+      )}
+
+      <form onSubmit={enviar} className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-5">
+        <label className="block text-sm font-bold text-gray-600">
+          Para qual aluno?
           <select
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2"
+            className={inputClasses}
             value={alunoId || ""}
             onChange={(e) => setAlunoId(Number(e.target.value))}
           >
             {alunos.map((a) => (
               <option key={a.id} value={a.id}>
-                {a.nome} — {a.email}
+                {a.nome} ({a.email})
               </option>
             ))}
           </select>
         </label>
-        <label className="block text-sm text-slate-400">
-          Quantidade
+
+        <label className="block text-sm font-bold text-gray-600">
+          Quanto quer enviar?
           <input
             type="number"
             min={1}
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2"
+            className={inputClasses}
             value={q}
             onChange={(e) => setQ(Number(e.target.value))}
             required
           />
         </label>
-        <label className="block text-sm text-slate-400">
-          Mensagem justificativa
+
+        <label className="block text-sm font-bold text-gray-600">
+          Por que está enviando?
           <textarea
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2"
+            className={`${inputClasses} resize-none`}
+            placeholder="Ex: Excelente participação na aula de Banco de Dados"
             value={justificativa}
             onChange={(e) => setJustificativa(e.target.value)}
             required
             rows={3}
           />
         </label>
+
         <button
           type="submit"
-          className="w-full rounded bg-amber-500 py-2 font-medium text-slate-950"
+          className="w-full rounded-full bg-[#820AD1] py-4 font-bold text-white shadow-lg transition-all hover:bg-[#6D08B1] active:scale-95"
         >
-          Enviar
+          Confirmar envio
         </button>
       </form>
 
-      <p className="mt-4">
-        <Link to="/app" className="text-amber-400">
-          Voltar
+      <div className="text-center">
+        <Link to="/app" className="text-sm font-bold text-gray-400 hover:text-[#820AD1] transition-colors">
+          ← Cancelar e voltar
         </Link>
-      </p>
+      </div>
     </div>
   );
 }

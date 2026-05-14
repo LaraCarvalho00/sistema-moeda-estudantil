@@ -5,10 +5,10 @@
 * **US03:** Como **Professor**, eu quero enviar moedas a um aluno com uma mensagem justificativa, para reconhecer seu mérito.
 * **US04:** Como **Aluno** e **Professor**, eu quero consultar meu extrato de transações, para ter controle do histórico de envios, recebimentos e trocas.
 * **US05:** Como **Empresa Parceira**, eu quero cadastrar vantagens (com descrição, foto e custo em moedas), para oferecê-las aos alunos.
-* **US06:** Como **Aluno**, eu quero resgatar uma vantagem usando meu saldo, para obter um cupom de desconto enviado por e-mail.
-* **US07:** Como **Sistema**, eu quero enviar e-mails automatizados (para aluno com cupom e parceiro com código de conferência) sempre que uma troca for realizada, para garantir a segurança da transação.
-* **US08:** Como **Aluno**, eu quero navegar, buscar e filtrar o catálogo de vantagens (por preço, parceiro ou palavra-chave), para decidir o que resgatar com clareza.
-* **US09:** Como **Aluno** e **Professor**, eu quero autenticar-me com credenciais seguras (e sessão por JWT), para acessar apenas as funções e dados do meu papel.
-* **US10:** Como **Aluno** ou **Professor**, eu quero recuperar ou redefinir o acesso quando esquecer a senha, para retomar o uso do sistema sem suporte manual.
-* **US11:** Como **Professor**, eu quero listar alunos vinculados à minha instituição (ou turma, conforme o cadastro), para escolher o destinatário correto ao enviar moedas.
-* **US12:** Como **Empresa Parceira**, eu quero acompanhar resgates e códigos de conferência das minhas vantagens, para validar trocas junto ao aluno e auditar o uso do catálogo.
+* **US06:** Como **Aluno**, eu quero resgatar uma vantagem usando meu saldo, para obter um cupom de desconto enviado por email.
+* **US07:** Como **Sistema**, eu quero enviar emails automatizados (para aluno com cupom e parceiro com código de conferência) sempre que uma troca for realizada, para garantir a segurança da transação.
+* **US08:** Como **Usuário (Aluno, Professor ou Empresa)**, eu quero realizar o login com email e senha, para acessar as funcionalidades do sistema de forma segura.
+* **US09:** Como **Empresa Parceira**, eu quero me cadastrar no sistema informando meus dados básicos, para que eu possa começar a disponibilizar benefícios na plataforma.
+* **US10:** Como **Aluno**, eu quero receber uma notificação por email ao receber moedas de um professor, para ter ciência imediata do reconhecimento recebido.
+* **US11:** Como **Professor**, eu quero que meu saldo não utilizado no semestre seja acumulado para o próximo período, para que eu não perca o saldo remanescente.
+* **US12:** Como **Aluno**, eu quero selecionar minha Instituição de Ensino a partir de uma lista pré-cadastrada no momento do cadastro, para garantir que meus dados estejam vinculados corretamente à minha faculdade.

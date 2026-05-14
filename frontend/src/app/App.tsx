@@ -11,49 +11,51 @@ import { ParceiroVantagensPage } from "@/features/vantagens/ParceiroVantagensPag
 
 function Navegacao() {
   const { usuario, logout, carregando } = useAuth();
+  
   if (carregando) {
     return (
-      <header className="border-b border-slate-800 bg-slate-900/50 px-4 py-3">
-        <p className="text-sm text-slate-500">Carregando…</p>
+      <header className="border-b border-gray-200 bg-white px-4 py-3">
+        <p className="text-sm text-gray-400">Carregando…</p>
       </header>
     );
   }
+
   return (
-    <header className="border-b border-slate-800 bg-slate-900/50">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+    <header className="border-b border-gray-100 bg-white shadow-sm">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4">
         <Link
           to="/"
-          className="text-lg font-semibold tracking-tight text-amber-400/90"
+          className="text-xl font-bold tracking-tight text-[#820AD1]"
         >
           Moeda Estudantil
         </Link>
-        <nav className="flex flex-wrap items-center gap-3 text-sm">
+        <nav className="flex flex-wrap items-center gap-4 text-sm font-medium">
           {usuario && (
             <>
-              <span className="text-slate-500">
-                {usuario.nome}{" "}
-                <span className="text-slate-400">· {usuario.perfil}</span>
+              <div className="flex items-center gap-2 text-gray-600">
+                <span className="font-semibold">{usuario.nome.toLowerCase()}</span>
+                <span className="text-xs bg-purple-100 text-[#820AD1] px-2 py-0.5 rounded-full uppercase">{usuario.perfil}</span>
                 {usuario.perfil !== "PARCEIRO" && (
-                  <span className="ml-1 text-amber-300/90">
+                  <span className="ml-1 font-bold text-gray-900">
                     · {usuario.saldoMoedas} moedas
                   </span>
                 )}
-              </span>
+              </div>
               <Link
-                className="rounded bg-slate-800 px-2 py-1 text-slate-200 hover:bg-slate-700"
+                className="rounded-full bg-[#820AD1] px-4 py-1.5 text-white hover:bg-[#6D08B1] transition-colors"
                 to="/app"
               >
                 Painel
               </Link>
               <Link
-                className="text-slate-400 hover:text-slate-200"
+                className="text-gray-500 hover:text-[#820AD1] transition-colors"
                 to="/app/extrato"
               >
                 Extrato
               </Link>
               {usuario.perfil === "ALUNO" && (
                 <Link
-                  className="text-slate-400 hover:text-slate-200"
+                  className="text-gray-500 hover:text-[#820AD1] transition-colors"
                   to="/app/loja"
                 >
                   Vantagens
@@ -61,24 +63,16 @@ function Navegacao() {
               )}
               {usuario.perfil === "PROFESSOR" && (
                 <Link
-                  className="text-amber-400/80 hover:text-amber-300"
+                  className="text-[#820AD1] hover:underline"
                   to="/app/enviar"
                 >
                   Enviar moedas
                 </Link>
               )}
-              {usuario.perfil === "PARCEIRO" && (
-                <Link
-                  className="text-amber-400/80 hover:text-amber-300"
-                  to="/app/parceiro/vantagens"
-                >
-                  Minhas ofertas
-                </Link>
-              )}
               <button
                 type="button"
                 onClick={logout}
-                className="text-rose-400/90 hover:underline"
+                className="text-gray-400 hover:text-red-500 transition-colors"
               >
                 Sair
               </button>
@@ -86,11 +80,11 @@ function Navegacao() {
           )}
           {!usuario && (
             <>
-              <Link className="text-slate-400 hover:text-white" to="/entrar">
+              <Link className="text-gray-600 hover:text-[#820AD1]" to="/entrar">
                 Entrar
               </Link>
               <Link
-                className="rounded border border-amber-600/50 px-3 py-1 text-amber-400/90"
+                className="rounded-full border-2 border-[#820AD1] px-4 py-1.5 text-[#820AD1] font-bold hover:bg-purple-50 transition-colors"
                 to="/cadastro"
               >
                 Cadastro
@@ -105,7 +99,8 @@ function Navegacao() {
 
 export function App() {
   return (
-    <div className="min-h-screen">
+    // Troquei o fundo para o cinza bem claro do Nubank
+    <div className="min-h-screen bg-[#F5F5F5] text-gray-900">
       <Navegacao />
       <main className="mx-auto max-w-5xl px-4 py-8">
         <Routes>
