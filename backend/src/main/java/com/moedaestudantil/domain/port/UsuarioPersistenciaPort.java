@@ -21,7 +21,8 @@ public interface UsuarioPersistenciaPort {
 
   void atualizarSemestreProfessor(Long id, String chaveSemestre);
 
-  Page<Usuario> listarPorInstituicao(Long instituicaoId, TipoPerfil perfil, Pageable pageable);
+  Page<Usuario> listarPorInstituicao(
+      Long instituicaoId, TipoPerfil perfil, String buscaNomeOuEmailOpcional, Pageable pageable);
 
   @lombok.Value
   @lombok.Builder

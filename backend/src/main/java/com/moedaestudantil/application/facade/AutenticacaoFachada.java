@@ -28,6 +28,7 @@ public class AutenticacaoFachada {
   private final UsuarioSpringDataRepository repositorio;
   private final PasswordEncoder passwordEncoder;
   private final JwtServico jwt;
+  private final TransacaoFachada transacaoFachada;
 
   @Value("${app.jwt.expiration-minutes:1440}")
   private int minutosToken;
@@ -51,7 +52,7 @@ public class AutenticacaoFachada {
     return emissor(u.getId());
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public AutenticacaoRespostaDados login(String email, String senha) {
     var opt = credenciais.buscarComSenhaPorEmail(email.trim().toLowerCase());
     if (opt.isEmpty() || !passwordEncoder.matches(senha, opt.get().getHashSenha())) {
@@ -60,18 +61,30 @@ public class AutenticacaoFachada {
     return emissor(opt.get().getId());
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public UsuarioSessaoPublica meuPerfilPublico(long usuarioId) {
-    return UsuarioSessaoPublica.aPartir(
+    var u =
         persistencia
             .buscarPorId(usuarioId)
-            .orElseThrow(() -> new RegraDeNegocio("Usuário não encontrado.")));
+            .orElseThrow(() -> new RegraDeNegocio("Usuário não encontrado."));
+    u = aplicarCreditoSemestreProfessorSeNecessario(u);
+    return UsuarioSessaoPublica.aPartir(u);
   }
 
   private AutenticacaoRespostaDados emissor(long id) {
     var u = persistencia.buscarPorId(id).orElseThrow();
+    u = aplicarCreditoSemestreProfessorSeNecessario(u);
     return AutenticacaoRespostaDados.de(
         jwt.gerarToken(id, u.getEmail(), u.getPerfil()), minutosToken, u);
+  }
+
+  /** Garante crédito semestral (US02) antes de expor saldo em login/registro/sessão. */
+  private Usuario aplicarCreditoSemestreProfessorSeNecessario(Usuario u) {
+    if (u.getPerfil() != TipoPerfil.PROFESSOR) {
+      return u;
+    }
+    transacaoFachada.obterSaldoProfessorComSemestre(u.getId());
+    return persistencia.buscarPorId(u.getId()).orElseThrow();
   }
 
   public record UsuarioSessaoPublica(

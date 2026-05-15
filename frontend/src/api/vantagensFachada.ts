@@ -24,6 +24,21 @@ export const vantagensFachada = {
     });
   },
 
+  atualizarVantagem(
+    id: number,
+    c: {
+      titulo: string;
+      descricao: string;
+      custoEmMoedas: number;
+      fotoUrl?: string;
+    },
+  ) {
+    return apiFetch<Vantagem>(`/api/v1/parceiro/vantagens/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(c),
+    });
+  },
+
   excluir(id: number) {
     return apiFetch<void>(`/api/v1/parceiro/vantagens/${id}`, { method: "DELETE" });
   },

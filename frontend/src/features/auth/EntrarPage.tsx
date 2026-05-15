@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { authFachada } from "@/api/authFachada";
 import { useAuth } from "./AuthContext";
+import { VoltarLink } from "@/components/VoltarLink";
 
 export function EntrarPage() {
   const nav = useNavigate();
@@ -104,12 +105,9 @@ export function EntrarPage() {
           </Link>
         </p>
 
-        <Link
-          to="/"
-          className="block text-xs text-gray-400 hover:text-gray-600"
-        >
-          ← Voltar para o início
-        </Link>
+        <VoltarLink to="/" className="justify-center">
+          Voltar ao início
+        </VoltarLink>
       </div>
     </div>
   );

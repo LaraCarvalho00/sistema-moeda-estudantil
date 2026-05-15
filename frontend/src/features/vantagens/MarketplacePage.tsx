@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { vantagensFachada } from "@/api/vantagensFachada";
 import { useAuth } from "@/features/auth/AuthContext";
 import type { Vantagem } from "@/api/types";
+import { VoltarLink } from "@/components/VoltarLink";
 
 export function MarketplacePage() {
   const { usuario, carregando, atualizar } = useAuth();
@@ -136,14 +137,9 @@ export function MarketplacePage() {
         ))}
       </div>
 
-      <div className="pt-8 text-center">
-        <Link
-          to="/app"
-          className="text-sm font-bold text-gray-400 transition-colors hover:text-[#820AD1]"
-        >
-          ← Voltar ao painel
-        </Link>
-      </div>
+      <p className="pt-8 text-center">
+        <VoltarLink className="justify-center" />
+      </p>
     </div>
   );
 }

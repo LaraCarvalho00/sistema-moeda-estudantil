@@ -102,9 +102,21 @@ class UsuarioPersistenciaAdapter implements UsuarioPersistenciaPort {
   @Override
   @Transactional(readOnly = true)
   public Page<Usuario> listarPorInstituicao(
-      Long instituicaoId, TipoPerfil perfil, Pageable pageable) {
-    return repo
-        .findByPerfilAndInstituicao_Id(perfil, instituicaoId, pageable)
-        .map(mapeador::paraDominio);
+      Long instituicaoId, TipoPerfil perfil, String buscaNomeOuEmailOpcional, Pageable pageable) {
+    String b =
+        buscaNomeOuEmailOpcional == null ? "" : buscaNomeOuEmailOpcional.trim();
+    Page<UsuarioJpaEntity> pagina;
+    if (b.isEmpty()) {
+      pagina = repo.findByPerfilAndInstituicao_Id(perfil, instituicaoId, pageable);
+    } else {
+      String termo = b.length() > 100 ? b.substring(0, 100) : b;
+      termo = termo.replace("%", "").replace("_", "");
+      if (termo.isBlank()) {
+        pagina = repo.findByPerfilAndInstituicao_Id(perfil, instituicaoId, pageable);
+      } else {
+        pagina = repo.findByPerfilAndInstituicao_IdComBusca(perfil, instituicaoId, termo, pageable);
+      }
+    }
+    return pagina.map(mapeador::paraDominio);
   }
 }

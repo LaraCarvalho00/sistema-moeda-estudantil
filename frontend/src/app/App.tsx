@@ -8,6 +8,7 @@ import { ExtratoPage } from "@/features/extrato/ExtratoPage";
 import { MarketplacePage } from "@/features/vantagens/MarketplacePage";
 import { EnviarMoedasPage } from "@/features/moedas/EnviarMoedasPage";
 import { ParceiroVantagensPage } from "@/features/vantagens/ParceiroVantagensPage";
+import { RequirePerfis } from "@/app/RequirePerfis";
 
 function Navegacao() {
   const { usuario, logout, carregando } = useAuth();
@@ -47,12 +48,14 @@ function Navegacao() {
               >
                 Painel
               </Link>
-              <Link
-                className="text-gray-500 hover:text-[#820AD1] transition-colors"
-                to="/app/extrato"
-              >
-                Extrato
-              </Link>
+              {(usuario.perfil === "ALUNO" || usuario.perfil === "PROFESSOR") && (
+                <Link
+                  className="text-gray-500 hover:text-[#820AD1] transition-colors"
+                  to="/app/extrato"
+                >
+                  Extrato
+                </Link>
+              )}
               {usuario.perfil === "ALUNO" && (
                 <Link
                   className="text-gray-500 hover:text-[#820AD1] transition-colors"
@@ -67,6 +70,14 @@ function Navegacao() {
                   to="/app/enviar"
                 >
                   Enviar moedas
+                </Link>
+              )}
+              {usuario.perfil === "PARCEIRO" && (
+                <Link
+                  className="text-gray-500 hover:text-[#820AD1] transition-colors"
+                  to="/app/parceiro/vantagens"
+                >
+                  Minhas ofertas
                 </Link>
               )}
               <button
@@ -108,12 +119,28 @@ export function App() {
           <Route path="/entrar" element={<EntrarPage />} />
           <Route path="/cadastro" element={<CadastroPage />} />
           <Route path="/app" element={<PainelPage />} />
-          <Route path="/app/extrato" element={<ExtratoPage />} />
-          <Route path="/app/loja" element={<MarketplacePage />} />
-          <Route path="/app/enviar" element={<EnviarMoedasPage />} />
+          <Route path="/app/extrato" element={
+            <RequirePerfis perfis={["ALUNO", "PROFESSOR"]}>
+              <ExtratoPage />
+            </RequirePerfis>
+          } />
+          <Route path="/app/loja" element={
+            <RequirePerfis perfis={["ALUNO"]}>
+              <MarketplacePage />
+            </RequirePerfis>
+          } />
+          <Route path="/app/enviar" element={
+            <RequirePerfis perfis={["PROFESSOR"]}>
+              <EnviarMoedasPage />
+            </RequirePerfis>
+          } />
           <Route
             path="/app/parceiro/vantagens"
-            element={<ParceiroVantagensPage />}
+            element={
+              <RequirePerfis perfis={["PARCEIRO"]}>
+                <ParceiroVantagensPage />
+              </RequirePerfis>
+            }
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

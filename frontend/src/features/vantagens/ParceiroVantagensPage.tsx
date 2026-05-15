@@ -1,8 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { vantagensFachada } from "@/api/vantagensFachada";
 import { useAuth } from "@/features/auth/AuthContext";
 import type { Vantagem } from "@/api/types";
+import { VoltarLink } from "@/components/VoltarLink";
+
+const inputClass =
+  "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-[#820AD1] focus:ring-1 focus:ring-[#820AD1]";
+
+function limparFormulario() {
+  return { tit: "", desc: "", custo: 1 };
+}
 
 export function ParceiroVantagensPage() {
   const { usuario, carregando, atualizar } = useAuth();
@@ -10,7 +18,10 @@ export function ParceiroVantagensPage() {
   const [tit, setTit] = useState("");
   const [desc, setDesc] = useState("");
   const [custo, setCusto] = useState(1);
+  const [editandoId, setEditandoId] = useState<number | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [salvando, setSalvando] = useState(false);
+  const [listaCarregando, setListaCarregando] = useState(true);
 
   const carregar = useCallback(async () => {
     const d = await vantagensFachada.minhasComoParceiro();
@@ -18,119 +29,291 @@ export function ParceiroVantagensPage() {
   }, []);
 
   useEffect(() => {
-    if (usuario?.perfil === "PARCEIRO") {
-      void (async () => {
-        try {
-          await carregar();
-        } catch (e) {
-          setErro(e instanceof Error ? e.message : "Falha");
-        }
-      })();
-    }
+    if (usuario?.perfil !== "PARCEIRO") return;
+    void (async () => {
+      setListaCarregando(true);
+      setErro(null);
+      try {
+        await carregar();
+      } catch (e) {
+        setErro(e instanceof Error ? e.message : "Falha ao carregar ofertas.");
+      } finally {
+        setListaCarregando(false);
+      }
+    })();
   }, [carregar, usuario?.perfil]);
 
   if (carregando) {
-    return <p className="text-slate-500">…</p>;
+    return (
+      <p className="py-10 text-center text-gray-500">Carregando ofertas…</p>
+    );
   }
   if (!usuario) {
     return <Navigate to="/entrar" replace />;
   }
-  if (usuario.perfil !== "PARCEIRO") {
-    return <Navigate to="/app" replace />;
+
+  function iniciarEdicao(v: Vantagem) {
+    setErro(null);
+    setEditandoId(v.id);
+    setTit(v.titulo);
+    setDesc(v.descricao);
+    setCusto(v.custoEmMoedas);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function criar(e: React.FormEvent) {
+  function cancelarEdicao() {
+    setEditandoId(null);
+    const z = limparFormulario();
+    setTit(z.tit);
+    setDesc(z.desc);
+    setCusto(z.custo);
+    setErro(null);
+  }
+
+  async function enviar(e: React.FormEvent) {
     e.preventDefault();
     setErro(null);
+    const custoNum = Math.floor(Number(custo));
+    if (!Number.isFinite(custoNum) || custoNum < 1) {
+      setErro("Indique um custo em moedas maior ou igual a 1.");
+      return;
+    }
+    setSalvando(true);
     try {
-      await vantagensFachada.criarVantagem({
-        titulo: tit,
-        descricao: desc,
-        custoEmMoedas: custo,
+      const payload = {
+        titulo: tit.trim(),
+        descricao: desc.trim(),
+        custoEmMoedas: custoNum,
         fotoUrl: "",
-      });
-      setTit("");
-      setDesc("");
-      setCusto(1);
+      };
+      if (editandoId != null) {
+        await vantagensFachada.atualizarVantagem(editandoId, payload);
+        cancelarEdicao();
+      } else {
+        await vantagensFachada.criarVantagem(payload);
+        const z = limparFormulario();
+        setTit(z.tit);
+        setDesc(z.desc);
+        setCusto(z.custo);
+      }
       await carregar();
       await atualizar();
     } catch (e2) {
-      setErro(e2 instanceof Error ? e2.message : "Erro");
+      setErro(e2 instanceof Error ? e2.message : "Não foi possível guardar.");
+    } finally {
+      setSalvando(false);
     }
   }
 
   return (
-    <div>
-      <h1 className="mb-4 text-2xl font-semibold">Vantagens do parceiro</h1>
-      {erro && <p className="mb-2 text-rose-400">{erro}</p>}
+    <div className="mx-auto max-w-5xl space-y-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            Gerir ofertas
+          </h1>
+          <p className="mt-1 max-w-xl text-gray-600">
+            Publique vantagens para os alunos resgatarem com moedas. Pode editar
+            título, descrição ou custo a qualquer momento.
+          </p>
+        </div>
+        <VoltarLink className="shrink-0 self-start sm:mt-1" />
+      </div>
 
-      <form onSubmit={criar} className="mb-8 space-y-2 rounded border border-slate-800 p-4">
-        <h2 className="font-medium">Nova vantagem (US05)</h2>
-        <input
-          className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2"
-          placeholder="Título"
-          value={tit}
-          onChange={(e) => setTit(e.target.value)}
-          required
-        />
-        <textarea
-          className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2"
-          placeholder="Descrição"
-          value={desc}
-          onChange={(e) => setDesc(e.target.value)}
-          required
-          rows={2}
-        />
-        <input
-          type="number"
-          min={1}
-          className="w-full max-w-xs rounded border border-slate-700 bg-slate-900 px-3 py-2"
-          value={custo}
-          onChange={(e) => setCusto(Number(e.target.value))}
-        />
-        <button
-          type="submit"
-          className="rounded bg-amber-500 px-4 py-2 text-sm font-medium text-slate-950"
+      {erro && (
+        <div
+          role="alert"
+          className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
         >
-          Publicar
-        </button>
-      </form>
+          {erro}
+        </div>
+      )}
 
-      <ul className="space-y-2">
-        {lista.map((v) => (
-          <li
-            key={v.id}
-            className="flex items-center justify-between border-b border-slate-800 py-2"
+      <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
+        <section className="lg:col-span-5">
+          <form
+            onSubmit={enviar}
+            className="space-y-5 rounded-3xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8"
           >
-            <div>
-              <p className="font-medium">{v.titulo}</p>
-              <p className="text-sm text-slate-500">{v.custoEmMoedas} moedas</p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-bold text-gray-900">
+                {editandoId != null ? "Editar oferta" : "Nova oferta"}
+              </h2>
+              {editandoId != null && (
+                <button
+                  type="button"
+                  onClick={cancelarEdicao}
+                  className="text-sm font-semibold text-gray-500 underline-offset-2 hover:text-gray-800 hover:underline"
+                >
+                  Cancelar edição
+                </button>
+              )}
             </div>
-            <button
-              type="button"
-              onClick={async () => {
-                if (window.confirm("Remover?")) {
-                  try {
-                    await vantagensFachada.excluir(v.id);
-                    await carregar();
-                  } catch (e) {
-                    setErro(e instanceof Error ? e.message : "Erro");
-                  }
-                }
-              }}
-              className="text-rose-400/90"
-            >
-              excluir
-            </button>
-          </li>
-        ))}
-      </ul>
 
-      <p className="mt-4">
-        <Link to="/app" className="text-amber-400">
-          Painel
-        </Link>
-      </p>
+            {editandoId != null && (
+              <p className="rounded-xl bg-purple-50 px-3 py-2 text-xs font-medium text-[#5a078f]">
+                A alterar a oferta n.º {editandoId}. As mudanças refletem-se de
+                imediato na loja dos alunos.
+              </p>
+            )}
+
+            <label className="block text-sm font-semibold text-gray-700">
+              Título
+              <input
+                className={`${inputClass} mt-1.5`}
+                placeholder="Ex.: Café cortesia"
+                value={tit}
+                onChange={(e) => setTit(e.target.value)}
+                required
+                maxLength={120}
+                autoComplete="off"
+              />
+            </label>
+
+            <div className="grid gap-5 sm:grid-cols-1">
+              <label className="block text-sm font-semibold text-gray-700">
+                Custo em moedas
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  step={1}
+                  className={`${inputClass} mt-1.5 text-lg font-semibold tabular-nums sm:max-w-[220px]`}
+                  value={custo}
+                  onChange={(e) => setCusto(Number(e.target.value))}
+                  required
+                  aria-describedby="hint-custo"
+                />
+                <span
+                  id="hint-custo"
+                  className="mt-1.5 block text-xs text-gray-500"
+                >
+                  Valor debitado ao aluno no resgate (mínimo 1 moeda).
+                </span>
+              </label>
+            </div>
+
+            <label className="block text-sm font-semibold text-gray-700">
+              Descrição
+              <textarea
+                className={`${inputClass} mt-1.5 min-h-[100px] resize-y`}
+                placeholder="Benefício, validade, como usar o cupão ou código no estabelecimento."
+                value={desc}
+                onChange={(e) => setDesc(e.target.value)}
+                required
+                rows={4}
+                maxLength={2000}
+              />
+            </label>
+
+            <button
+              type="submit"
+              disabled={salvando}
+              className="w-full rounded-full bg-[#820AD1] px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#6D08B1] enabled:active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            >
+              {salvando
+                ? "A guardar…"
+                : editandoId != null
+                  ? "Guardar alterações"
+                  : "Publicar oferta"}
+            </button>
+          </form>
+        </section>
+
+        <section className="lg:col-span-7">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+              As suas ofertas
+            </h3>
+            {listaCarregando && (
+              <span className="text-xs text-gray-400">A atualizar…</span>
+            )}
+          </div>
+
+          <ul className="space-y-3">
+            {listaCarregando && lista.length === 0 && (
+              <li className="rounded-2xl border border-gray-100 bg-white px-6 py-10 text-center text-sm text-gray-500 shadow-sm">
+                A carregar as suas ofertas…
+              </li>
+            )}
+            {!listaCarregando && lista.length === 0 && (
+              <li className="rounded-2xl border border-dashed border-gray-200 bg-white/80 px-6 py-12 text-center text-sm text-gray-500">
+                Ainda não publicou nenhuma oferta. Use o formulário para criar
+                a primeira.
+              </li>
+            )}
+            {lista.map((v) => (
+              <li
+                key={v.id}
+                className={`rounded-2xl border bg-white p-5 shadow-sm transition-colors ${
+                  editandoId === v.id
+                    ? "border-[#820AD1] ring-1 ring-[#820AD1]/25"
+                    : "border-gray-100 hover:border-gray-200"
+                }`}
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-lg font-bold text-gray-900">
+                        {v.titulo}
+                      </p>
+                      <span className="inline-flex items-center rounded-full bg-purple-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#820AD1]">
+                        {v.custoEmMoedas}{" "}
+                        {v.custoEmMoedas === 1 ? "moeda" : "moedas"}
+                      </span>
+                    </div>
+                    {v.descricao?.trim() ? (
+                      <p className="text-sm leading-relaxed text-gray-600 line-clamp-4 whitespace-pre-wrap">
+                        {v.descricao}
+                      </p>
+                    ) : (
+                      <p className="text-sm italic text-gray-400">
+                        Sem descrição.
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 flex-wrap gap-2 sm:flex-col sm:items-stretch">
+                    <button
+                      type="button"
+                      onClick={() => iniciarEdicao(v)}
+                      className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-[#820AD1] hover:text-[#820AD1]"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (
+                          !window.confirm(
+                            "Remover esta oferta? Os alunos deixam de vê-la na loja.",
+                          )
+                        ) {
+                          return;
+                        }
+                        setErro(null);
+                        try {
+                          await vantagensFachada.excluir(v.id);
+                          if (editandoId === v.id) cancelarEdicao();
+                          await carregar();
+                        } catch (err) {
+                          setErro(
+                            err instanceof Error
+                              ? err.message
+                              : "Não foi possível excluir.",
+                          );
+                        }
+                      }}
+                      className="rounded-xl px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
     </div>
   );
 }

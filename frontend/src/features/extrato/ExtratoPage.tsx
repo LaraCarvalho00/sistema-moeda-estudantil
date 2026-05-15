@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { moedasFachada } from "@/api/moedasFachada";
 import { useAuth } from "@/features/auth/AuthContext";
 import type { TransacaoResumo } from "@/api/types";
+import { VoltarLink } from "@/components/VoltarLink";
 
 export function ExtratoPage() {
   const { usuario, carregando } = useAuth();
@@ -30,14 +31,9 @@ export function ExtratoPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Cabeçalho */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-gray-900">Histórico</h1>
-        <Link 
-          className="text-sm font-bold text-[#820AD1] hover:bg-purple-50 px-3 py-1 rounded-full transition-colors" 
-          to="/app"
-        >
-          Voltar
-        </Link>
+        <VoltarLink />
       </div>
 
       {erro && (

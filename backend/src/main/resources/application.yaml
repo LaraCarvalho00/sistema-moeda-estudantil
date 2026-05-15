@@ -2,15 +2,18 @@ spring:
   application:
     name: moeda-estudantil-api
   datasource:
-    url: jdbc:postgresql://localhost:5432/moeda
-    username: moeda
-    password: moeda
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/moeda}
+    username: ${DATABASE_USER:moeda}
+    password: ${DATABASE_PASSWORD:moeda}
     driver-class-name: org.postgresql.Driver
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
   mail:
     host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:25}

@@ -166,7 +166,8 @@ sistema-moeda-estudantil/
 │       ├── infrastructure/   # JPA, segurança JWT, mail, seed
 │       └── web/              # REST, DTOs, handlers
 │   └── src/main/resources/
-│       └── application.yaml
+│       ├── application.yaml
+│       └── db/migration/       # Flyway (schema + seed)
 ├── frontend/
 │   ├── Dockerfile
 │   ├── package.json
@@ -286,6 +287,19 @@ docker compose up --build -d
 
 Para encerrar: `docker compose down`. Logs: `docker compose logs -f api` ou `web`.
 
+- **Schema e dados de desenvolvimento** — [Flyway](backend/src/main/resources/db/migration/): `V1__initial_schema.sql` cria tabelas; `V2__seed_dev.sql` insere 2 instituições, **14 utilizadores** (todos com senha **`senha123`**) e 2 vantagens. Hibernate em **`ddl-auto: validate`** (não altera o schema em runtime).
+- **`docker compose down -v`** — apaga o volume do Postgres; útil se mudares migrações e precisares reaplicar do zero (evita conflito com bases antigas criadas só pelo Hibernate).
+
+### Contas de demonstração (seed)
+
+| E-mail | Perfil |
+|--------|--------|
+| `parceiro1@demo.com`, `parceiro2@demo.com` | PARCEIRO |
+| `aluno1@demo.com` … `aluno8@demo.com` | ALUNO |
+| `prof1@demo.com` … `prof4@demo.com` | PROFESSOR |
+
+Senha comum: **`senha123`**.
+
 ### Build para deploy
 
 **API (JAR):**
@@ -340,7 +354,7 @@ O Spring **não** lê `.env` automaticamente; use shell, IDE ou o provedor de *d
 ## Produção e cuidados
 
 - Rotação e segredo forte para **`JWT_SECRET`**.
-- **`ddl-auto: update`** — adequado ao lab; em produção, use **migrações** (Flyway/Liquibase).
+- **Migrações Flyway** — o repositório versiona o DDL e o seed de dev; em produção, continue a evoluir com novas versões `V3__…` em vez de alterar migrações já aplicadas.
 - Escalar a API = mais instâncias *stateless* + Postgres dimensionado; reutilizar o mesmo padrão de *pool* de conexões.
 - **Testes:** o POM inclui `spring-boot-starter-test`; evoluir com `src/test` para fluxos de saldo e resgate.
 

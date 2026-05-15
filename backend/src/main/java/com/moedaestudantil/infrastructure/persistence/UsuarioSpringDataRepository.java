@@ -19,6 +19,21 @@ public interface UsuarioSpringDataRepository extends JpaRepository<UsuarioJpaEnt
   Page<UsuarioJpaEntity> findByPerfilAndInstituicao_Id(
       TipoPerfil perfil, long instituicaoId, Pageable pageable);
 
+  @Query(
+      """
+      select u from UsuarioJpaEntity u
+      where u.perfil = :perfil and u.instituicao.id = :instId
+      and (
+        lower(u.nome) like lower(concat('%', :busca, '%'))
+        or lower(u.email) like lower(concat('%', :busca, '%'))
+      )
+      """)
+  Page<UsuarioJpaEntity> findByPerfilAndInstituicao_IdComBusca(
+      @Param("perfil") TipoPerfil perfil,
+      @Param("instId") long instituicaoId,
+      @Param("busca") String busca,
+      Pageable pageable);
+
   @Modifying
   @Query(
       """

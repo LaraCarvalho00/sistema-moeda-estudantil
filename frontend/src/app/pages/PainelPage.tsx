@@ -22,21 +22,23 @@ export function PainelPage() {
         </p>
       </header>
 
-      {/* Card de Saldo Estilo Nu */}
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-        <div className="flex justify-between items-start mb-2">
-          <span className="text-gray-600 font-medium">Saldo em moedas</span>
-          <div className="h-8 w-8 bg-purple-50 rounded-full flex items-center justify-center">
-            <span className="text-[#820AD1] text-xs font-bold">💰</span>
+      {/* Card de saldo: alunos e professores (parceiro não usa moedas neste fluxo) */}
+      {usuario.perfil !== "PARCEIRO" && (
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+          <div className="flex justify-between items-start mb-2">
+            <span className="text-gray-600 font-medium">Saldo em moedas</span>
+            <div className="h-8 w-8 bg-purple-50 rounded-full flex items-center justify-center">
+              <span className="text-[#820AD1] text-xs font-bold">💰</span>
+            </div>
           </div>
+          <h2 className="text-4xl font-extrabold text-gray-900">
+            {usuario.saldoMoedas}
+          </h2>
+          <p className="text-xs text-gray-400 mt-2 uppercase tracking-wider font-semibold">
+            Moedas estudantis disponíveis
+          </p>
         </div>
-        <h2 className="text-4xl font-extrabold text-gray-900">
-          {usuario.saldoMoedas}
-        </h2>
-        <p className="text-xs text-gray-400 mt-2 uppercase tracking-wider font-semibold">
-          Moedas estudantis disponíveis
-        </p>
-      </div>
+      )}
 
       {/* Ações Rápidas (Cards) */}
       <div className="grid grid-cols-1 gap-3">
@@ -75,13 +77,17 @@ export function PainelPage() {
           </Link>
         )}
 
-        <Link 
-          to="/app/extrato" 
-          className="flex items-center justify-between bg-white p-5 rounded-2xl border border-gray-100 hover:border-[#820AD1] transition-all group"
-        >
-          <span className="font-bold text-gray-700 group-hover:text-[#820AD1]">Ver meu extrato</span>
-          <span className="text-[#820AD1]">→</span>
-        </Link>
+        {(usuario.perfil === "ALUNO" || usuario.perfil === "PROFESSOR") && (
+          <Link
+            to="/app/extrato"
+            className="flex items-center justify-between bg-white p-5 rounded-2xl border border-gray-100 hover:border-[#820AD1] transition-all group"
+          >
+            <span className="font-bold text-gray-700 group-hover:text-[#820AD1]">
+              Ver meu extrato
+            </span>
+            <span className="text-[#820AD1]">→</span>
+          </Link>
+        )}
       </div>
     </div>
   );
