@@ -156,6 +156,7 @@ Versões de starters gerenciadas pelo **POM parent** `spring-boot-starter-parent
 ```text
 sistema-moeda-estudantil/
 ├── backend/
+│   ├── Dockerfile
 │   ├── pom.xml
 │   ├── .env.example
 │   └── src/main/java/com/moedaestudantil/
@@ -167,11 +168,13 @@ sistema-moeda-estudantil/
 │   └── src/main/resources/
 │       └── application.yaml
 ├── frontend/
+│   ├── Dockerfile
 │   ├── package.json
+│   ├── nginx.docker.conf   # proxy /api no contêiner web
 │   ├── vite.config.ts
 │   └── src/                  # app, features, api, assets
 ├── docs/uml/                 # histórias, PlantUML, índice
-└── docker-compose.yml        # Postgres 16 (desenvolvimento)
+└── docker-compose.yml        # Postgres + API + SPA (`docker compose up -d db` = só o banco)
 ```
 
 ---
@@ -242,7 +245,7 @@ curl -s http://localhost:8080/api/v1/auth/eu \
 - **Java 17+**
 - **Maven 3.8+** (ou IDE com import do `pom.xml`)
 - **Node.js 18+** (LTS) e **npm**
-- **Docker** (opcional, para subir o Postgres de dev) **ou** PostgreSQL 14+ local
+- **Docker** (opcional: só Postgres em dev **ou** stack completo — ver [Tudo no Docker](#tudo-no-docker-postgres-api-e-spa)) **ou** PostgreSQL 14+ local
 
 ### Passos (ordem: banco → API → *front*)
 
@@ -269,6 +272,20 @@ curl -s http://localhost:8080/api/v1/auth/eu \
 
 4. **Acesse** a SPA: **http://localhost:5173** (em dev, proxy envia `/api` para a API na **8080**).
 
+### Tudo no Docker: Postgres, API e SPA
+
+Com o **Docker Desktop** (ou daemon) em execução, na raiz do repositório:
+
+```bash
+docker compose up --build -d
+```
+
+- **Interface:** http://localhost:5173 — o Nginx do contêiner `web` serve o build estático e encaminha `/api` para a API (mesmo fluxo relativo do `VITE_API_BASE` vazio).
+- **API direta (opcional):** http://localhost:8080  
+- **Postgres:** porta **5432** no host (`moeda` / `moeda`, base `moeda`).
+
+Para encerrar: `docker compose down`. Logs: `docker compose logs -f api` ou `web`.
+
 ### Build para deploy
 
 **API (JAR):**
@@ -288,7 +305,7 @@ npm run build
 
 Se a API estiver em **outro host/origem**, defina `VITE_API_BASE` **no build** (variável do Vite).
 
-> Este repositório fornece **`docker-compose` só para o PostgreSQL**, não um `Dockerfile` *full-stack* como em projetos *single JAR* + *Render*. Para cloud, o padrão é: API (JAR ou imagem) + banco gerenciado + *front* em *object storage* ou *CDN*, ou um *platform PaaS* com variáveis listadas abaixo.
+> O **`docker-compose`** na raiz sobe **Postgres**, **API** (imagem Maven + JRE) e **front** (Nginx com proxy `/api`). Para cloud, o padrão costuma ser: API (JAR ou imagem) + banco gerenciado + *front* em *object storage* ou *CDN*, ou um *platform PaaS* com variáveis listadas abaixo.
 
 ---
 

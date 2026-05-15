@@ -9,6 +9,36 @@ services:
       - "5432:5432"
     volumes:
       - moeda_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moeda -d moeda"]
+      interval: 4s
+      timeout: 3s
+      retries: 12
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/moeda
+      DATABASE_USER: moeda
+      DATABASE_PASSWORD: moeda
+      MAIL_ENABLED: "false"
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   moeda_pg_data: {}

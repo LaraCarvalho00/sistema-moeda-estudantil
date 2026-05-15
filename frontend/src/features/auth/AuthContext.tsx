@@ -8,12 +8,25 @@ import {
 } from "react";
 import { getToken, setToken } from "@/api/http";
 import { authFachada } from "@/api/authFachada";
-import type { UsuarioSessao } from "@/api/types";
+import type { AuthResponse, UsuarioSessao } from "@/api/types";
+
+function sessaoDeRespostaAuth(d: AuthResponse): UsuarioSessao {
+  return {
+    id: d.usuarioId,
+    email: d.email,
+    nome: d.nome,
+    perfil: d.perfil,
+    instituicaoId: d.instituicaoId,
+    nomeInstituicao: d.nomeInstituicao,
+    saldoMoedas: d.saldoMoedas,
+  };
+}
 
 type Ctx = {
   usuario: UsuarioSessao | null;
   carregando: boolean;
   atualizar: () => Promise<void>;
+  concluirAutenticacao: (d: AuthResponse) => void;
   logout: () => void;
 };
 
@@ -40,6 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const concluirAutenticacao = useCallback((d: AuthResponse) => {
+    setUsuario(sessaoDeRespostaAuth(d));
+    setCarregando(false);
+  }, []);
+
   useEffect(() => {
     void atualizar();
   }, [atualizar]);
@@ -47,11 +65,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     authFachada.sair();
     setUsuario(null);
+    setCarregando(false);
   }, []);
 
   return (
     <AuthContext.Provider
-      value={{ usuario, carregando, atualizar, logout }}
+      value={{ usuario, carregando, atualizar, concluirAutenticacao, logout }}
     >
       {children}
     </AuthContext.Provider>
