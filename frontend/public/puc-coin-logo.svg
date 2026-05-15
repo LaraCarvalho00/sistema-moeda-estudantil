@@ -1,0 +1,16 @@
+<svg width="720" height="300" viewBox="0 0 720 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="300" rx="42" fill="#FFFFFF"/>
+  <circle cx="154" cy="150" r="92" fill="#820AD1"/>
+  <circle cx="154" cy="150" r="73" fill="#9B2CE3"/>
+  <circle cx="154" cy="150" r="56" fill="#FFFFFF" fill-opacity="0.16"/>
+  <path d="M154 82v136" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round"/>
+  <path d="M116 110c15-16 59-21 75 5 18 30-19 46-45 50-26 4-49 20-26 44 17 18 53 14 75-4" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="226" cy="88" r="31" fill="#F2C94C"/>
+  <path d="M226 72v32" stroke="#2C1E05" stroke-width="5" stroke-linecap="round"/>
+  <path d="M217 80c5-5 19-6 24 1 5 8-6 13-14 14-8 1-15 6-8 12 5 5 17 4 24-1" stroke="#2C1E05" stroke-width="5" stroke-linecap="round"/>
+  <path d="M84 228c48 27 99 29 147 0" stroke="#F2C94C" stroke-width="12" stroke-linecap="round"/>
+  <text x="292" y="132" fill="#171717" font-family="Arial, Helvetica, sans-serif" font-size="66" font-weight="800">PUC Coin</text>
+  <text x="298" y="176" fill="#820AD1" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="800" letter-spacing="7">MOEDA ESTUDANTIL</text>
+  <rect x="296" y="204" width="226" height="10" rx="5" fill="#F2C94C"/>
+  <rect x="536" y="204" width="74" height="10" rx="5" fill="#820AD1"/>
+</svg>

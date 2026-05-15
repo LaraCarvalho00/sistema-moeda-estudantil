@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, Link } from "react-router-dom";
+import { Navigate, Route, Routes, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/features/auth/AuthContext";
 import { HomePage } from "@/app/pages/HomePage";
 import { EntrarPage } from "@/features/auth/EntrarPage";
@@ -9,6 +9,11 @@ import { MarketplacePage } from "@/features/vantagens/MarketplacePage";
 import { EnviarMoedasPage } from "@/features/moedas/EnviarMoedasPage";
 import { ParceiroVantagensPage } from "@/features/vantagens/ParceiroVantagensPage";
 import { RequirePerfis } from "@/app/RequirePerfis";
+import { PucCoinLogo } from "@/components/BrandLogos";
+import { Rodape } from "@/components/Rodape";
+import { VideoBackground } from "@/components/VideoBackground";
+
+const ROTAS_COM_VIDEO = new Set(["/", "/entrar", "/cadastro"]);
 
 function Navegacao() {
   const { usuario, logout, carregando } = useAuth();
@@ -22,13 +27,14 @@ function Navegacao() {
   }
 
   return (
-    <header className="border-b border-gray-100 bg-white shadow-sm">
+    <header className="relative z-30 border-b border-gray-100 bg-white shadow-sm">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4">
         <Link
           to="/"
-          className="text-xl font-bold tracking-tight text-[#820AD1]"
+          className="transition-opacity hover:opacity-85"
+          aria-label="PUC Coin"
         >
-          Moeda Estudantil
+          <PucCoinLogo />
         </Link>
         <nav className="flex flex-wrap items-center gap-4 text-sm font-medium">
           {usuario && (
@@ -109,11 +115,15 @@ function Navegacao() {
 }
 
 export function App() {
+  const { pathname } = useLocation();
+  const mostrarVideo = ROTAS_COM_VIDEO.has(pathname);
+
   return (
-    // Troquei o fundo para o cinza bem claro do Nubank
-    <div className="min-h-screen bg-[#F5F5F5] text-gray-900">
+    <div className="flex min-h-screen flex-col bg-[#F5F5F5] text-gray-900">
       <Navegacao />
-      <main className="mx-auto max-w-5xl px-4 py-8">
+      {mostrarVideo && <VideoBackground />}
+      <main className="relative z-10 w-full flex-1 px-4 py-8">
+        <div className="mx-auto max-w-5xl">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/entrar" element={<EntrarPage />} />
@@ -144,7 +154,9 @@ export function App() {
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </div>
       </main>
+      <Rodape />
     </div>
   );
 }
