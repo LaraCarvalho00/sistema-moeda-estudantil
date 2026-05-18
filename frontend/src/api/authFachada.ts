@@ -9,6 +9,7 @@ export const authFachada = {
     nome: string,
     perfil: TipoPerfil,
     instituicaoId: number | null,
+    telefone?: string,
   ): Promise<AuthResponse> {
     const d = await apiFetch<AuthResponse>("/api/v1/auth/registrar", {
       method: "POST",
@@ -18,6 +19,7 @@ export const authFachada = {
         nome,
         perfil,
         instituicaoId: instituicaoId ?? null,
+        telefone: telefone?.trim() || null,
       }),
     });
     setToken(d.accessToken);

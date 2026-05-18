@@ -35,13 +35,19 @@ public class AutenticacaoFachada {
 
   @Transactional
   public AutenticacaoRespostaDados registrar(
-      String email, String senha, String nome, TipoPerfil perfil, Long instituicaoId) {
+      String email,
+      String senha,
+      String nome,
+      TipoPerfil perfil,
+      Long instituicaoId,
+      String telefone) {
     if (repositorio.existsByEmail(email.trim().toLowerCase())) {
       throw new RegraDeNegocio("E-mail já cadastrado.");
     }
     var c =
         UsuarioCriacao.builder()
             .email(email.trim().toLowerCase())
+            .telefone(telefone)
             .hashSenha(passwordEncoder.encode(senha))
             .nome(nome.trim())
             .perfil(perfil)
@@ -90,6 +96,7 @@ public class AutenticacaoFachada {
   public record UsuarioSessaoPublica(
       long id,
       String email,
+      String telefone,
       String nome,
       TipoPerfil perfil,
       long instituicaoId,
@@ -100,6 +107,7 @@ public class AutenticacaoFachada {
       return new UsuarioSessaoPublica(
           u.getId(),
           u.getEmail(),
+          u.getTelefone() != null ? u.getTelefone() : "",
           u.getNome(),
           u.getPerfil(),
           u.getInstituicaoId() != null ? u.getInstituicaoId() : 0L,

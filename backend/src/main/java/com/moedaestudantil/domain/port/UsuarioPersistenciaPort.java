@@ -28,6 +28,7 @@ public interface UsuarioPersistenciaPort {
   @lombok.Builder
   class UsuarioCriacao {
     String email;
+    String telefone;
     String hashSenha;
     String nome;
     com.moedaestudantil.domain.model.TipoPerfil perfil;

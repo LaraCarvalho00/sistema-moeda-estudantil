@@ -15,6 +15,20 @@ services:
       timeout: 3s
       retries: 12
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: moeda
+      RABBITMQ_DEFAULT_PASS: moeda
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 4s
+      retries: 20
+
   api:
     build:
       context: ./backend
@@ -24,10 +38,28 @@ services:
       DATABASE_USER: moeda
       DATABASE_PASSWORD: moeda
       MAIL_ENABLED: "false"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: moeda
+      RABBITMQ_PASSWORD: moeda
+      NOTIFICATIONS_RABBIT_ENABLED: "true"
+      NOTIFICATIONS_RABBIT_EXCHANGE: moeda.notifications
+      NOTIFICATIONS_RABBIT_QUEUE: moeda.notifications.email
+      NOTIFICATIONS_RABBIT_ROUTING_KEY: email
+      EMAILJS_ENABLED: "false"
+      EMAILJS_SERVICE_ID: ""
+      EMAILJS_TEMPLATE_ID: ""
+      EMAILJS_PUBLIC_KEY: ""
+      EMAILJS_PRIVATE_KEY: ""
+      ZAPSENDER_ENABLED: "false"
+      ZAPSENDER_API_URL: ""
+      ZAPSENDER_TOKEN: ""
     ports:
       - "8080:8080"
     depends_on:
       db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   web:

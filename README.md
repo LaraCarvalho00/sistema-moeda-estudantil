@@ -1,6 +1,8 @@
 # Sistema de Moeda Estudantil
 
-**Monorepo** de **API REST (Spring Boot)** + **SPA (React, Vite, TypeScript)** com **PostgreSQL**: moedas virtuais emitidas por professores, resgate de vantagens por alunos e cadastro/gestão por parceiros. Autenticação **JWT** (stateless) e e-mail opcional via **JavaMail**. Projeto de **laboratório de software** com histórias e diagramas em `docs/uml/`.
+> Atualizacao: o projeto agora usa RabbitMQ para fila de notificacoes e um worker para enviar e-mail via EmailJS e WhatsApp via ZapSender.
+
+**Monorepo** de **API REST (Spring Boot)** + **SPA (React, Vite, TypeScript)** com **PostgreSQL** e **RabbitMQ**: moedas virtuais emitidas por professores, resgate de vantagens por alunos e cadastro/gestão por parceiros. Autenticação **JWT** (stateless) e notificações assíncronas via **EmailJS** e **ZapSender**. Projeto de **laboratório de software** com histórias e diagramas em `docs/uml/`.
 
 <div align="center">
 
@@ -8,6 +10,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.5-6DB33F?logo=springboot)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql)](https://www.postgresql.org/)
+[![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.13-FF6600?logo=rabbitmq)](https://www.rabbitmq.com/)
 [![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite)](https://vitejs.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-a%20definir-lightgrey)](#-autores-e-licença)
@@ -18,7 +21,7 @@
 
 ---
 
-> **TL;DR** | **O quê:** fidelidade acadêmica com saldo, extrato e vantagens. | **Quem:** professores, alunos, parceiros (RBAC). | **Dados:** PostgreSQL; crédito semestral e chave de semestre em `America/Sao_Paulo`. | **Lógica de negócio** só no servidor.
+> **TL;DR** | **O quê:** fidelidade acadêmica com saldo, extrato e vantagens. | **Quem:** professores, alunos, parceiros (RBAC). | **Dados:** PostgreSQL; crédito semestral e chave de semestre em `America/Sao_Paulo`. | **Mensagens:** RabbitMQ + worker para EmailJS/ZapSender. | **Lógica de negócio** só no servidor.
 
 ---
 
@@ -63,6 +66,8 @@ A SPA chama somente a API; regras críticas **não** dependem de validação exc
 
 ## Funcionalidades
 
+Atualizacao de notificacoes: envio de moedas e resgate de premio agora publicam eventos no RabbitMQ. O worker envia e-mail via EmailJS e WhatsApp via ZapSender quando as respectivas credenciais estao configuradas.
+
 - **Registro e login** – Cadastro por perfil, instituição, JWT no client (`accessToken`).
 - **Crédito semestral (professor)** – Garantia automática de **1.000 moedas** por semestre ao trocar a chave; saldo e extrato.
 - **Envio de moedas** – Professor seleciona aluno da mesma instituição, quantidade e justificativa; notificação opcional ao aluno.
@@ -86,7 +91,10 @@ flowchart LR
   C[Parceiro] --> SPA
   SPA --> API[API Spring Boot]
   API --> DB[(PostgreSQL)]
-  API -.->|MAIL_ENABLED| SMTP[SMTP]
+  API --> MQ[(RabbitMQ)]
+  MQ --> W[Worker notificacoes]
+  W --> E[EmailJS]
+  W --> Z[ZapSender WhatsApp]
 ```
 
 ### Contêineres
@@ -95,6 +103,8 @@ flowchart LR
 flowchart LR
   B[Browser] -->|"/api vía proxy dev"| S[Spring Boot 8080]
   S --> PG[(Postgres 5432)]
+  S --> MQ[(RabbitMQ 5672)]
+  MQ --> RUI[RabbitMQ UI 15672]
 ```
 
 ### Camadas (`com.moedaestudantil`)
@@ -103,7 +113,7 @@ flowchart LR
 |--------|--------|
 | `domain` | Modelo, portas (interfaces). |
 | `application` | Fachadas, fábricas, regras de transação, notificação. |
-| `infrastructure` | JPA, JWT, e-mail, seed. |
+| `infrastructure` | JPA, JWT, RabbitMQ, EmailJS/ZapSender, seed. |
 | `web` | REST, DTOs, `@PreAuthorize`, erros 422. |
 
 **Front** – *features* em `frontend/src/features`, proxy Vite: `/api` → `http://localhost:8080` ([`vite.config.ts`](frontend/vite.config.ts)).
@@ -121,9 +131,12 @@ flowchart LR
 | Tecnologia | Uso |
 |------------|-----|
 | **Java 17** | Linguagem do backend. |
-| **Spring Boot 3.2.5** | Web, JPA, Security, Validation, Mail. |
+| **Spring Boot 3.2.5** | Web, JPA, Security, Validation e AMQP. |
 | **Spring Security + jjwt 0.12.5** | Autenticação e parsing JWT. |
 | **PostgreSQL** | Persistência (dev: Docker Compose 16). |
+| **RabbitMQ** | Fila de notificações e worker assíncrono. |
+| **EmailJS** | Envio de e-mails via API REST. |
+| **ZapSender** | Envio opcional de mensagens WhatsApp. |
 | **Lombok** | `domain` e redução de *boilerplate* (imutáveis, etc.). |
 | **React 18 + TypeScript + Vite 5** | SPA e build. |
 | **Tailwind CSS 3** | Estilos. |
@@ -143,7 +156,8 @@ Versões de starters gerenciadas pelo **POM parent** `spring-boot-starter-parent
 | `org.springframework.boot` | `spring-boot-starter-data-jpa` | JPA, Hibernate, repositórios. |
 | `org.springframework.boot` | `spring-boot-starter-security` | Filtros, `@PreAuthorize`. |
 | `org.springframework.boot` | `spring-boot-starter-validation` | Bean Validation (`@Valid`, etc.). |
-| `org.springframework.boot` | `spring-boot-starter-mail` | E-mail (SMTP). |
+| `org.springframework.boot` | `spring-boot-starter-amqp` | RabbitMQ, publisher e worker com `@RabbitListener`. |
+| `org.springframework.boot` | `spring-boot-starter-mail` | Dependência histórica de e-mail; notificações novas usam EmailJS via REST. |
 | `org.postgresql` | `postgresql` | Driver JDBC. |
 | `io.jsonwebtoken` | `jjwt-api` / `jjwt-impl` / `jjwt-jackson` | **0.12.5** – JWT. |
 | `org.projectlombok` | `lombok` | Anotações. |
@@ -191,6 +205,102 @@ O fluxo central de **envio de moedas** está em [`TransacaoFachada`](backend/src
 5. **Auditoria e notificação** – Registro de transação + *strategy* de notificação se e-mail ativo.
 
 **Resgate e parceiro** – Controladores no pacote `web` (ex.: [`ControleVantagensResgate`](backend/src/main/java/com/moedaestudantil/web/ControleVantagensResgate.java)) aplicam o mesmo padrão: regra na aplicação, persistência em portas, autorização por perfil.
+
+---
+
+## Notificacoes: RabbitMQ, EmailJS e ZapSender
+
+O backend publica eventos de notificacao depois que a transacao de negocio confirma no banco. Isso evita enviar e-mail/WhatsApp para uma operacao que falhou ou sofreu rollback.
+
+### Fluxo
+
+```mermaid
+flowchart LR
+  API[API Spring Boot] -->|publica evento| MQ[(RabbitMQ)]
+  MQ -->|consome fila| W[Worker Spring]
+  W -->|email| E[EmailJS]
+  W -->|WhatsApp| Z[ZapSender]
+```
+
+### Eventos enviados
+
+| Evento | Destinatario | Conteudo principal |
+|--------|--------------|--------------------|
+| Professor envia moedas | Aluno | Quantidade recebida, professor, justificativa e saldo atualizado |
+| Professor envia moedas | Professor | Quantidade enviada, aluno, justificativa e saldo atualizado |
+| Aluno resgata premio | Aluno | Item retirado, cupom e saldo atualizado |
+
+### RabbitMQ
+
+O `docker-compose.yml` sobe o RabbitMQ com management UI:
+
+- AMQP: `localhost:5672`
+- Painel: `http://localhost:15672`
+- Usuario/senha: `moeda` / `moeda`
+
+Configuracao padrao da fila:
+
+```env
+NOTIFICATIONS_RABBIT_ENABLED=true
+NOTIFICATIONS_RABBIT_EXCHANGE=moeda.notifications
+NOTIFICATIONS_RABBIT_QUEUE=moeda.notifications.email
+NOTIFICATIONS_RABBIT_ROUTING_KEY=email
+```
+
+### EmailJS
+
+Para enviar e-mails reais, configure:
+
+```env
+EMAILJS_ENABLED=true
+EMAILJS_API_URL=https://api.emailjs.com/api/v1.0/email/send
+EMAILJS_SERVICE_ID=seu_service_id
+EMAILJS_TEMPLATE_ID=seu_template_id
+EMAILJS_PUBLIC_KEY=sua_public_key
+EMAILJS_PRIVATE_KEY=sua_private_key_opcional
+```
+
+No template do EmailJS, use variaveis como:
+
+```text
+{{to_email}}
+{{to_name}}
+{{subject}}
+{{message}}
+{{quantidade}}
+{{saldo_atualizado}}
+{{item_retirado}}
+{{cupom}}
+```
+
+### ZapSender / WhatsApp
+
+Para WhatsApp, o usuario precisa ter telefone cadastrado. O campo `WhatsApp` foi adicionado no cadastro e salvo em `usuarios.telefone`.
+
+Configure:
+
+```env
+ZAPSENDER_ENABLED=true
+ZAPSENDER_API_URL=https://seu-endpoint-zapsender
+ZAPSENDER_TOKEN=seu_token
+```
+
+O cliente atual envia um `POST` com:
+
+```json
+{
+  "phone": "31999998888",
+  "text": "mensagem"
+}
+```
+
+e header:
+
+```text
+Authorization: Bearer <ZAPSENDER_TOKEN>
+```
+
+Se o provedor ZapSender usado pela equipe exigir outro formato, ajuste `ZapSenderClient`.
 
 ---
 

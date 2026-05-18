@@ -26,7 +26,7 @@ class ControleAutenticacao {
   AutenticacaoRespostaDados registrar(
       @RequestBody @jakarta.validation.Valid RegistroSolicitacao c) {
     return autenticacaoFachada.registrar(
-        c.email, c.senha, c.nome, c.perfil, c.instituicaoId);
+        c.email, c.senha, c.nome, c.perfil, c.instituicaoId, c.telefone);
   }
 
   @PostMapping("/entrar")
@@ -44,7 +44,8 @@ class ControleAutenticacao {
       @NotBlank String senha,
       @NotBlank String nome,
       TipoPerfil perfil,
-      Long instituicaoId) {}
+      Long instituicaoId,
+      String telefone) {}
 
   public record EntradaSolicitacao(@Email @NotBlank String email, @NotBlank String senha) {}
 }

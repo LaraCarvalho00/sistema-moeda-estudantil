@@ -15,6 +15,7 @@ class JpaMapeadorUsuario {
     return Usuario.builder()
         .id(e.getId())
         .email(e.getEmail())
+        .telefone(e.getTelefone())
         .nome(e.getNome())
         .perfil(e.getPerfil())
         .saldoMoedas(e.getSaldoMoedas())

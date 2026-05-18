@@ -6,6 +6,7 @@ export type AuthResponse = {
   expiresIn: number;
   usuarioId: number;
   email: string;
+  telefone: string;
   nome: string;
   perfil: TipoPerfil;
   instituicaoId: number;
@@ -16,6 +17,7 @@ export type AuthResponse = {
 export type UsuarioSessao = {
   id: number;
   email: string;
+  telefone: string;
   nome: string;
   perfil: TipoPerfil;
   instituicaoId: number;

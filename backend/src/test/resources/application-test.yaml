@@ -4,3 +4,12 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+
+app:
+  notifications:
+    rabbit:
+      enabled: false
+    emailjs:
+      enabled: false
+    zapsender:
+      enabled: false

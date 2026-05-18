@@ -14,6 +14,7 @@ function sessaoDeRespostaAuth(d: AuthResponse): UsuarioSessao {
   return {
     id: d.usuarioId,
     email: d.email,
+    telefone: d.telefone,
     nome: d.nome,
     perfil: d.perfil,
     instituicaoId: d.instituicaoId,

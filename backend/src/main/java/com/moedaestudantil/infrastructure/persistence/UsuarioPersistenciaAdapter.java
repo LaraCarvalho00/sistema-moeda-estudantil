@@ -36,6 +36,7 @@ class UsuarioPersistenciaAdapter implements UsuarioPersistenciaPort {
     }
     var u = new UsuarioJpaEntity();
     u.setEmail(dados.getEmail().trim().toLowerCase());
+    u.setTelefone(normalizarTelefone(dados.getTelefone()));
     u.setSenhaHash(dados.getHashSenha());
     u.setNome(dados.getNome().trim());
     u.setPerfil(dados.getPerfil());
@@ -118,5 +119,12 @@ class UsuarioPersistenciaAdapter implements UsuarioPersistenciaPort {
       }
     }
     return pagina.map(mapeador::paraDominio);
+  }
+
+  private static String normalizarTelefone(String telefone) {
+    if (telefone == null || telefone.isBlank()) {
+      return null;
+    }
+    return telefone.replaceAll("[^0-9]", "");
   }
 }

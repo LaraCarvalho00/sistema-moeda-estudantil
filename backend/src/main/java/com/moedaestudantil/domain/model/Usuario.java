@@ -8,6 +8,7 @@ import lombok.Value;
 public class Usuario {
   Long id;
   String email;
+  String telefone;
   String nome;
   TipoPerfil perfil;
   long saldoMoedas;

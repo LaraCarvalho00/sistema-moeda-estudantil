@@ -28,6 +28,9 @@ public class UsuarioJpaEntity {
   @Column(nullable = false, unique = true, length = 180)
   private String email;
 
+  @Column(length = 32)
+  private String telefone;
+
   @Column(nullable = false, name = "senha_hash", length = 200)
   private String senhaHash;
 

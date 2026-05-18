@@ -16,6 +16,7 @@ export function CadastroPage() {
     email: "",
     senha: "",
     nome: "",
+    telefone: "",
     instituicaoId: 0,
   });
   const [erro, setErro] = useState<string | null>(null);
@@ -47,6 +48,7 @@ export function CadastroPage() {
         form.nome,
         perfil,
         instId,
+        form.telefone,
       );
       concluirAutenticacao(d);
       nav("/app", { replace: true });
@@ -144,6 +146,17 @@ export function CadastroPage() {
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
               required
+              disabled={enviando}
+            />
+          </label>
+
+          <label className="block text-sm font-bold text-gray-600">
+            WhatsApp
+            <input
+              className={inputClasses}
+              placeholder="Ex: 31999998888"
+              value={form.telefone}
+              onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
               disabled={enviando}
             />
           </label>

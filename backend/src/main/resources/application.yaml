@@ -23,6 +23,11 @@ spring:
       mail.smtp:
         auth: false
         starttls.enable: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
 
 app:
   jwt:
@@ -32,6 +37,23 @@ app:
     api-base: ${API_BASE_URL:http://localhost:8080}
   mail:
     enabled: ${MAIL_ENABLED:false}
+  notifications:
+    rabbit:
+      enabled: ${NOTIFICATIONS_RABBIT_ENABLED:false}
+      exchange: ${NOTIFICATIONS_RABBIT_EXCHANGE:moeda.notifications}
+      queue: ${NOTIFICATIONS_RABBIT_QUEUE:moeda.notifications.email}
+      routing-key: ${NOTIFICATIONS_RABBIT_ROUTING_KEY:email}
+    emailjs:
+      enabled: ${EMAILJS_ENABLED:false}
+      api-url: ${EMAILJS_API_URL:https://api.emailjs.com/api/v1.0/email/send}
+      service-id: ${EMAILJS_SERVICE_ID:}
+      template-id: ${EMAILJS_TEMPLATE_ID:}
+      public-key: ${EMAILJS_PUBLIC_KEY:}
+      private-key: ${EMAILJS_PRIVATE_KEY:}
+    zapsender:
+      enabled: ${ZAPSENDER_ENABLED:false}
+      api-url: ${ZAPSENDER_API_URL:}
+      token: ${ZAPSENDER_TOKEN:}
 
 server:
   port: ${PORT:8080}

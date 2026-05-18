@@ -43,7 +43,9 @@ public class ResgateAplicacao {
     TransacaoResumo r =
         transacaoPort.registrarResgate(
             aluno.getId(), vantagemId, vant.getCustoEmMoedas(), cupom, lote.getNota());
-    notificacaoEstrategiaPort.notificarResgate(aluno, vant, cupom, r);
+    Usuario alunoAtualizado =
+        usuarioPersistenciaPort.buscarPorId(aluno.getId()).orElseThrow();
+    notificacaoEstrategiaPort.notificarResgate(alunoAtualizado, vant, cupom, r);
     return r;
   }
 
