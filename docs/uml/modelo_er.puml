@@ -1,0 +1,60 @@
+@startuml
+!theme plain
+hide circle
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+entity "instituicoes" as instituicoes {
+  * id : BIGSERIAL <<PK>>
+  --
+  * nome : VARCHAR(200)
+}
+
+entity "usuarios" as usuarios {
+  * id : BIGSERIAL <<PK>>
+  --
+  * email : VARCHAR(180) <<UNIQUE>>
+  * senha_hash : VARCHAR(200)
+  * nome : VARCHAR(200)
+  * perfil : VARCHAR(20)
+  * saldo_moedas : BIGINT
+  telefone : VARCHAR(32)
+  instituicao_id : BIGINT <<FK>>
+  semestre_ultima_distribuicao : VARCHAR(9)
+}
+
+entity "vantagens" as vantagens {
+  * id : BIGSERIAL <<PK>>
+  --
+  * parceiro_id : BIGINT <<FK>>
+  * titulo : VARCHAR(200)
+  * descricao : VARCHAR(2000)
+  * custo_moedas : BIGINT
+  foto_url : VARCHAR(2000)
+}
+
+entity "transacoes" as transacoes {
+  * id : BIGSERIAL <<PK>>
+  --
+  * tipo : VARCHAR(20)
+  * quantidade : BIGINT
+  mensagem : VARCHAR(2000)
+  professor_id : BIGINT <<FK>>
+  * aluno_id : BIGINT <<FK>>
+  vantagem_id : BIGINT <<FK>>
+  codigo_cupom : VARCHAR(64)
+  * criado_em : TIMESTAMPTZ
+}
+
+instituicoes ||--o{ usuarios : possui
+usuarios ||--o{ vantagens : parceiro
+usuarios ||--o{ transacoes : aluno
+usuarios ||--o{ transacoes : professor
+vantagens ||--o{ transacoes : resgate
+
+note right of usuarios
+  Campos marcados com * sao requeridos.
+  telefone e opcional, usado para ZapSender.
+end note
+
+@enduml

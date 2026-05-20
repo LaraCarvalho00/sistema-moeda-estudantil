@@ -20,11 +20,14 @@ class RabbitNotificationWorker {
   @RabbitListener(queues = "${app.notifications.rabbit.queue}")
   void processar(String payload) throws Exception {
     var evento = objectMapper.readValue(payload, EmailNotificationMessage.class);
-    if (emailJsClient.prontoParaEnviar()) {
+    if (emailJsClient.prontoParaEnviar(evento)) {
       emailJsClient.enviar(evento);
       log.info("E-mail enviado via EmailJS: tipo={} destino={}", evento.type(), evento.toEmail());
     } else {
-      log.warn("EmailJS desabilitado ou incompleto; e-mail nao enviado para {}", evento.toEmail());
+      log.warn(
+          "EmailJS desabilitado, incompleto ou sem template para tipo={}; e-mail nao enviado para {}",
+          evento.type(),
+          evento.toEmail());
     }
 
     if (zapSenderClient.prontoParaEnviar() && temTexto(evento.toPhone())) {

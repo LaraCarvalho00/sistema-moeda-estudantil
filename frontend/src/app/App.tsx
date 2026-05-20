@@ -17,18 +17,26 @@ const ROTAS_COM_VIDEO = new Set(["/", "/entrar", "/cadastro"]);
 
 function Navegacao() {
   const { usuario, logout, carregando } = useAuth();
-  
+  const { pathname } = useLocation();
+
+  const linkClass = (to: string) =>
+    `rounded-full px-3 py-2 transition-colors ${
+      pathname === to
+        ? "bg-[#efe2fb] text-[#4b0d82]"
+        : "text-slate-600 hover:bg-white hover:text-[#4b0d82]"
+    }`;
+
   if (carregando) {
     return (
-      <header className="border-b border-gray-200 bg-white px-4 py-3">
-        <p className="text-sm text-gray-400">Carregando…</p>
+      <header className="border-b border-white/70 bg-white/80 px-4 py-3 backdrop-blur">
+        <p className="text-sm text-slate-400">Carregando...</p>
       </header>
     );
   }
 
   return (
-    <header className="relative z-30 border-b border-gray-100 bg-white shadow-sm">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4">
+    <header className="relative z-30 border-b border-white/70 bg-white/90 shadow-sm backdrop-blur-xl">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
         <Link
           to="/"
           className="transition-opacity hover:opacity-85"
@@ -36,74 +44,69 @@ function Navegacao() {
         >
           <PucCoinLogo />
         </Link>
-        <nav className="flex flex-wrap items-center gap-4 text-sm font-medium">
+
+        <nav className="flex flex-wrap items-center gap-2 text-sm font-semibold">
           {usuario && (
             <>
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="mr-1 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-slate-700 shadow-sm">
                 <span className="font-semibold">{usuario.nome.toLowerCase()}</span>
-                <span className="text-xs bg-purple-100 text-[#820AD1] px-2 py-0.5 rounded-full uppercase">{usuario.perfil}</span>
+                <span className="rounded-full bg-[#efe2fb] px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#4b0d82]">
+                  {usuario.perfil}
+                </span>
                 {usuario.perfil !== "PARCEIRO" && (
-                  <span className="ml-1 font-bold text-gray-900">
-                    · {usuario.saldoMoedas} moedas
+                  <span className="ml-1 font-display font-extrabold text-slate-950">
+                    {usuario.saldoMoedas} moedas
                   </span>
                 )}
               </div>
-              <Link
-                className="rounded-full bg-[#820AD1] px-4 py-1.5 text-white hover:bg-[#6D08B1] transition-colors"
-                to="/app"
-              >
+
+              <Link className={linkClass("/app")} to="/app">
                 Painel
               </Link>
+
               {(usuario.perfil === "ALUNO" || usuario.perfil === "PROFESSOR") && (
-                <Link
-                  className="text-gray-500 hover:text-[#820AD1] transition-colors"
-                  to="/app/extrato"
-                >
+                <Link className={linkClass("/app/extrato")} to="/app/extrato">
                   Extrato
                 </Link>
               )}
+
               {usuario.perfil === "ALUNO" && (
-                <Link
-                  className="text-gray-500 hover:text-[#820AD1] transition-colors"
-                  to="/app/loja"
-                >
+                <Link className={linkClass("/app/loja")} to="/app/loja">
                   Vantagens
                 </Link>
               )}
+
               {usuario.perfil === "PROFESSOR" && (
-                <Link
-                  className="text-[#820AD1] hover:underline"
-                  to="/app/enviar"
-                >
+                <Link className={linkClass("/app/enviar")} to="/app/enviar">
                   Enviar moedas
                 </Link>
               )}
+
               {usuario.perfil === "PARCEIRO" && (
                 <Link
-                  className="text-gray-500 hover:text-[#820AD1] transition-colors"
+                  className={linkClass("/app/parceiro/vantagens")}
                   to="/app/parceiro/vantagens"
                 >
                   Minhas ofertas
                 </Link>
               )}
+
               <button
                 type="button"
                 onClick={logout}
-                className="text-gray-400 hover:text-red-500 transition-colors"
+                className="rounded-full px-3 py-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
               >
                 Sair
               </button>
             </>
           )}
+
           {!usuario && (
             <>
-              <Link className="text-gray-600 hover:text-[#820AD1]" to="/entrar">
+              <Link className="rounded-full px-3 py-2 text-slate-700 hover:text-[#4b0d82]" to="/entrar">
                 Entrar
               </Link>
-              <Link
-                className="rounded-full border-2 border-[#820AD1] px-4 py-1.5 text-[#820AD1] font-bold hover:bg-purple-50 transition-colors"
-                to="/cadastro"
-              >
+              <Link className="btn-secondary px-4 py-2" to="/cadastro">
                 Cadastro
               </Link>
             </>
@@ -119,41 +122,50 @@ export function App() {
   const mostrarVideo = ROTAS_COM_VIDEO.has(pathname);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F5F5F5] text-gray-900">
+    <div className="flex min-h-screen flex-col text-slate-950">
       <Navegacao />
       {mostrarVideo && <VideoBackground />}
-      <main className="relative z-10 w-full flex-1 px-4 py-8">
-        <div className="mx-auto max-w-5xl">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/entrar" element={<EntrarPage />} />
-          <Route path="/cadastro" element={<CadastroPage />} />
-          <Route path="/app" element={<PainelPage />} />
-          <Route path="/app/extrato" element={
-            <RequirePerfis perfis={["ALUNO", "PROFESSOR"]}>
-              <ExtratoPage />
-            </RequirePerfis>
-          } />
-          <Route path="/app/loja" element={
-            <RequirePerfis perfis={["ALUNO"]}>
-              <MarketplacePage />
-            </RequirePerfis>
-          } />
-          <Route path="/app/enviar" element={
-            <RequirePerfis perfis={["PROFESSOR"]}>
-              <EnviarMoedasPage />
-            </RequirePerfis>
-          } />
-          <Route
-            path="/app/parceiro/vantagens"
-            element={
-              <RequirePerfis perfis={["PARCEIRO"]}>
-                <ParceiroVantagensPage />
-              </RequirePerfis>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+      <main className="relative z-10 w-full flex-1 px-4 py-8 sm:py-10">
+        <div className="mx-auto max-w-6xl">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/entrar" element={<EntrarPage />} />
+            <Route path="/cadastro" element={<CadastroPage />} />
+            <Route path="/app" element={<PainelPage />} />
+            <Route
+              path="/app/extrato"
+              element={
+                <RequirePerfis perfis={["ALUNO", "PROFESSOR"]}>
+                  <ExtratoPage />
+                </RequirePerfis>
+              }
+            />
+            <Route
+              path="/app/loja"
+              element={
+                <RequirePerfis perfis={["ALUNO"]}>
+                  <MarketplacePage />
+                </RequirePerfis>
+              }
+            />
+            <Route
+              path="/app/enviar"
+              element={
+                <RequirePerfis perfis={["PROFESSOR"]}>
+                  <EnviarMoedasPage />
+                </RequirePerfis>
+              }
+            />
+            <Route
+              path="/app/parceiro/vantagens"
+              element={
+                <RequirePerfis perfis={["PARCEIRO"]}>
+                  <ParceiroVantagensPage />
+                </RequirePerfis>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </div>
       </main>
       <Rodape />

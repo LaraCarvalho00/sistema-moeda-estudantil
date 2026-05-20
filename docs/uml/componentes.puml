@@ -1,0 +1,46 @@
+@startuml
+!theme plain
+left to right direction
+
+actor "Usuario" as User
+
+node "Browser" {
+  component "SPA React/Vite" as SPA
+}
+
+node "API Spring Boot" {
+  component "Controllers REST" as REST
+  component "Camada Application\n(Fachadas e casos de uso)" as APP
+  component "Dominio\n(Modelos e Portas)" as DOM
+  component "Adaptadores JPA" as JPA
+  component "Seguranca JWT" as JWT
+  component "Publisher RabbitMQ" as PUB
+  component "Worker de notificacoes" as WORKER
+  component "Gerador QR Code\nZXing" as QR
+}
+
+database "PostgreSQL" as DB
+queue "RabbitMQ\nmoeda.notifications.email" as MQ
+cloud "EmailJS" as EMAIL
+cloud "ZapSender\nWhatsApp" as ZAP
+
+User --> SPA
+SPA --> REST : HTTP /api/v1
+REST --> JWT
+REST --> APP
+APP --> DOM
+APP --> JPA
+JPA --> DB
+APP --> QR : cupom unico
+APP --> PUB : evento apos commit
+PUB --> MQ
+MQ --> WORKER
+WORKER --> EMAIL : REST
+WORKER --> ZAP : REST
+
+note bottom of MQ
+  RabbitMQ separa o fluxo de negocio
+  dos envios externos de notificacao.
+end note
+
+@enduml

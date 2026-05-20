@@ -1,0 +1,42 @@
+@startuml
+!theme plain
+autonumber
+
+actor Aluno
+participant "SPA React" as SPA
+participant "ResgateVantagemRequest\n<<objeto requerido>>" as REQ
+participant "ControleVantagensResgate" as REST
+participant "ResgateAplicacao" as RESGATE
+participant "UsuarioPersistenciaPort" as UPORT
+participant "VantagemPort" as VPORT
+participant "TransacaoPort" as TPORT
+participant "NotificacaoAplicada" as NOTIF
+participant "CupomQrCodeServico" as QR
+queue "RabbitMQ" as MQ
+participant "RabbitNotificationWorker" as WORKER
+participant "EmailJS" as EMAIL
+participant "ZapSender" as ZAP
+
+Aluno -> SPA : escolhe vantagem
+SPA -> REQ : monta {alunoIdToken, vantagemId}
+SPA -> REST : POST /alunos/resgatar-vantagem/{id}(REQ)
+REST -> RESGATE : resgatar(alunoId, vantagemId)
+RESGATE -> UPORT : buscar aluno
+RESGATE -> VPORT : buscar vantagem
+RESGATE -> RESGATE : validar saldo suficiente
+RESGATE -> UPORT : definirSaldo(alunoId, saldoAtualizado)
+RESGATE -> TPORT : registrarResgate(...)
+RESGATE -> NOTIF : notificarResgate(aluno, vantagem, cupom, transacao)
+NOTIF -> QR : gerar QR Code unico do cupom
+NOTIF -> MQ : publicar eventos aluno/parceiro
+RESGATE --> REST : resumo da transacao
+REST --> SPA : cupom e saldo atualizado
+SPA --> Aluno : mostra resgate concluido
+
+MQ -> WORKER : consumir mensagem
+WORKER -> EMAIL : enviar cupom + QR para aluno e parceiro
+alt telefone cadastrado e ZapSender ativo
+  WORKER -> ZAP : enviar WhatsApp
+end
+
+@enduml

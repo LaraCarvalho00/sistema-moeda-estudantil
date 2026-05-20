@@ -96,6 +96,8 @@ class VantagemAdapter implements VantagemPort {
 
   private Vantagem map(VantagemJpaEntity e) {
     String parceiroNome = e.getParceiro() != null ? e.getParceiro().getNome() : null;
+    String parceiroEmail = e.getParceiro() != null ? e.getParceiro().getEmail() : null;
+    String parceiroTelefone = e.getParceiro() != null ? e.getParceiro().getTelefone() : null;
     long parceiroId = e.getParceiro() == null ? 0L : e.getParceiro().getId();
     return Vantagem.builder()
         .id(e.getId())
@@ -105,6 +107,8 @@ class VantagemAdapter implements VantagemPort {
         .custoEmMoedas(e.getCustoEmMoedas())
         .fotoUrl(e.getFotoUrl())
         .parceiroNome(parceiroNome)
+        .parceiroEmail(parceiroEmail)
+        .parceiroTelefone(parceiroTelefone)
         .build();
   }
 }

@@ -1,0 +1,77 @@
+@startuml
+!theme plain
+left to right direction
+
+package "Entrada" {
+  component "SPA React" as SPA
+  component "Controllers REST" as REST
+}
+
+package "Aplicacao" {
+  component "AutenticacaoFachada" as AUTH
+  component "TransacaoFachada" as TX
+  component "ResgateAplicacao" as RESGATE
+  component "NotificacaoAplicada" as NOTIF
+}
+
+package "Portas do dominio" {
+  interface UsuarioPersistenciaPort as UPORT
+  interface UsuarioDadosAcessoPort as APORT
+  interface TransacaoPort as TPORT
+  interface VantagemPort as VPORT
+  interface InstituicaoPort as IPORT
+  interface NotificacaoEstrategiaPort as NPORT
+  interface EmailNotificationPublisher as EPUB
+}
+
+package "Adaptadores" {
+  component "UsuarioPersistenciaAdapter" as UAD
+  component "UsuarioAcessoAdapter" as AAD
+  component "TransacaoAdapter" as TAD
+  component "VantagemAdapter" as VAD
+  component "InstituicaoAdapter" as IAD
+  component "RabbitEmailNotificationPublisher" as RPUB
+  component "CupomQrCodeServico\n(ZXing)" as QR
+  component "RabbitNotificationWorker" as WORKER
+}
+
+database "PostgreSQL" as DB
+queue "RabbitMQ" as MQ
+cloud "EmailJS" as EMAIL
+cloud "ZapSender" as ZAP
+
+SPA --> REST
+REST --> AUTH
+REST --> TX
+REST --> RESGATE
+
+AUTH --> UPORT
+AUTH --> APORT
+TX --> UPORT
+TX --> TPORT
+TX --> NPORT
+RESGATE --> UPORT
+RESGATE --> TPORT
+RESGATE --> VPORT
+NOTIF ..|> NPORT
+NOTIF --> EPUB
+NOTIF --> QR
+
+UAD ..|> UPORT
+AAD ..|> APORT
+TAD ..|> TPORT
+VAD ..|> VPORT
+IAD ..|> IPORT
+RPUB ..|> EPUB
+
+UAD --> DB
+AAD --> DB
+TAD --> DB
+VAD --> DB
+IAD --> DB
+RPUB --> MQ
+MQ --> WORKER
+WORKER --> EMAIL
+WORKER --> ZAP
+
+@enduml

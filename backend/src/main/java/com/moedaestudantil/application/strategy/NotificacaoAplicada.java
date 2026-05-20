@@ -3,6 +3,8 @@ package com.moedaestudantil.application.strategy;
 import com.moedaestudantil.domain.model.TransacaoResumo;
 import com.moedaestudantil.domain.model.Usuario;
 import com.moedaestudantil.domain.model.Vantagem;
+import com.moedaestudantil.infrastructure.notification.CupomQrCodeServico;
+import com.moedaestudantil.infrastructure.notification.CupomQrCodeServico.CupomQrCode;
 import com.moedaestudantil.infrastructure.notification.EmailNotificationMessage;
 import com.moedaestudantil.infrastructure.notification.EmailNotificationPublisher;
 import java.util.LinkedHashMap;
@@ -17,6 +19,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 public class NotificacaoAplicada implements NotificacaoEstrategiaPort {
 
   private final EmailNotificationPublisher publisher;
+  private final CupomQrCodeServico qrCodeServico;
 
   @Override
   public void notificarEnvioMoedas(
@@ -28,7 +31,11 @@ public class NotificacaoAplicada implements NotificacaoEstrategiaPort {
   @Override
   public void notificarResgate(
       Usuario aluno, Vantagem vantagem, String codigoCupom, TransacaoResumo t) {
-    publicarDepoisDoCommit(emailResgateParaAluno(aluno, vantagem, codigoCupom, t));
+    CupomQrCode qrCode = qrCodeServico.gerar(aluno, vantagem, codigoCupom, t);
+    publicarDepoisDoCommit(emailResgateParaAluno(aluno, vantagem, codigoCupom, t, qrCode));
+    if (temTexto(vantagem.getParceiroEmail())) {
+      publicarDepoisDoCommit(emailResgateParaParceiro(aluno, vantagem, codigoCupom, t, qrCode));
+    }
   }
 
   private EmailNotificationMessage emailEnvioParaAluno(
@@ -84,7 +91,11 @@ public class NotificacaoAplicada implements NotificacaoEstrategiaPort {
   }
 
   private EmailNotificationMessage emailResgateParaAluno(
-      Usuario aluno, Vantagem vantagem, String codigoCupom, TransacaoResumo t) {
+      Usuario aluno,
+      Vantagem vantagem,
+      String codigoCupom,
+      TransacaoResumo t,
+      CupomQrCode qrCode) {
     var params = parametrosBase(aluno);
     params.put("aluno_nome", aluno.getNome());
     params.put("item_retirado", vantagem.getTitulo());
@@ -92,6 +103,10 @@ public class NotificacaoAplicada implements NotificacaoEstrategiaPort {
     params.put("parceiro_nome", valor(vantagem.getParceiroNome()));
     params.put("custo_moedas", vantagem.getCustoEmMoedas());
     params.put("cupom", codigoCupom);
+    params.put("codigo_conferencia", codigoCupom);
+    params.put("qr_code_payload", qrCode.payload());
+    params.put("qr_code_data_uri", qrCode.svgDataUri());
+    params.put("qr_code_img", qrCode.svgDataUri());
     params.put("saldo_atualizado", aluno.getSaldoMoedas());
     params.put("transacao_id", t.getId());
     return new EmailNotificationMessage(
@@ -104,9 +119,45 @@ public class NotificacaoAplicada implements NotificacaoEstrategiaPort {
             + vantagem.getTitulo()
             + ". Cupom: "
             + codigoCupom
+            + ". QR Code de conferencia gerado automaticamente."
             + ". Saldo atualizado: "
             + aluno.getSaldoMoedas()
             + ".",
+        params);
+  }
+
+  private EmailNotificationMessage emailResgateParaParceiro(
+      Usuario aluno,
+      Vantagem vantagem,
+      String codigoCupom,
+      TransacaoResumo t,
+      CupomQrCode qrCode) {
+    var params = parametrosBaseParceiro(vantagem);
+    params.put("aluno_nome", aluno.getNome());
+    params.put("aluno_email", aluno.getEmail());
+    params.put("item_retirado", vantagem.getTitulo());
+    params.put("premio", vantagem.getTitulo());
+    params.put("parceiro_nome", valor(vantagem.getParceiroNome()));
+    params.put("custo_moedas", vantagem.getCustoEmMoedas());
+    params.put("cupom", codigoCupom);
+    params.put("codigo_conferencia", codigoCupom);
+    params.put("qr_code_payload", qrCode.payload());
+    params.put("qr_code_data_uri", qrCode.svgDataUri());
+    params.put("qr_code_img", qrCode.svgDataUri());
+    params.put("transacao_id", t.getId());
+    return new EmailNotificationMessage(
+        "RESGATE_PREMIO_PARCEIRO",
+        vantagem.getParceiroEmail(),
+        vantagem.getParceiroTelefone(),
+        valor(vantagem.getParceiroNome()),
+        "Cupom PUC Coin para conferencia",
+        "O aluno "
+            + aluno.getNome()
+            + " resgatou "
+            + vantagem.getTitulo()
+            + ". Codigo de conferencia: "
+            + codigoCupom
+            + ". QR Code gerado automaticamente.",
         params);
   }
 
@@ -119,8 +170,21 @@ public class NotificacaoAplicada implements NotificacaoEstrategiaPort {
     return params;
   }
 
+  private static Map<String, Object> parametrosBaseParceiro(Vantagem vantagem) {
+    var params = new LinkedHashMap<String, Object>();
+    params.put("usuario_id", vantagem.getParceiroId());
+    params.put("nome", valor(vantagem.getParceiroNome()));
+    params.put("email", valor(vantagem.getParceiroEmail()));
+    params.put("telefone", valor(vantagem.getParceiroTelefone()));
+    return params;
+  }
+
   private static String valor(String valor) {
     return valor == null ? "" : valor;
+  }
+
+  private static boolean temTexto(String valor) {
+    return valor != null && !valor.isBlank();
   }
 
   private void publicarDepoisDoCommit(EmailNotificationMessage mensagem) {

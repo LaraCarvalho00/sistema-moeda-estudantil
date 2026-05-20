@@ -1,0 +1,45 @@
+@startuml
+!theme plain
+autonumber
+
+actor Professor
+participant "SPA React" as SPA
+participant "EnvioCorpo\n<<objeto requerido>>" as REQ
+participant "ControleMoedasERelatorio" as REST
+participant "TransacaoFachada" as TX
+participant "UsuarioPersistenciaPort" as UPORT
+participant "TransacaoPort" as TPORT
+participant "NotificacaoAplicada" as NOTIF
+queue "RabbitMQ" as MQ
+participant "RabbitNotificationWorker" as WORKER
+participant "EmailJS" as EMAIL
+participant "ZapSender" as ZAP
+
+Professor -> SPA : informa aluno, quantidade e justificativa
+SPA -> REQ : monta {alunoId, quantidade, mensagemJustificativa}
+SPA -> REST : POST /professores/enviar-moedas(REQ)
+REST -> TX : enviarMoedas(professorId, alunoId, qtd, msg)
+TX -> UPORT : buscar professor
+TX -> UPORT : garantir credito semestral
+TX -> UPORT : buscar aluno
+TX -> TX : validar mesma instituicao e saldo
+TX -> UPORT : atualizarSaldos(professor, aluno)
+TX -> TPORT : registrarEnvio(...)
+TX -> NOTIF : notificarEnvioMoedas(...)
+NOTIF -> MQ : publicar eventos aluno/professor
+TX --> REST : sucesso
+REST --> SPA : 204 No Content
+SPA --> Professor : mostra confirmacao
+
+MQ -> WORKER : consumir mensagem
+WORKER -> EMAIL : enviar e-mail
+alt telefone cadastrado e ZapSender ativo
+  WORKER -> ZAP : enviar WhatsApp
+end
+
+note over NOTIF, MQ
+  O evento e publicado apos a transacao
+  principal ser confirmada.
+end note
+
+@enduml

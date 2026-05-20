@@ -35,6 +35,8 @@ export type Vantagem = {
   custoEmMoedas: number;
   fotoUrl: string;
   parceiroNome: string;
+  parceiroEmail?: string;
+  parceiroTelefone?: string;
 };
 
 export type TransacaoResumo = {

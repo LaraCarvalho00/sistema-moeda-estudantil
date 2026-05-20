@@ -1,0 +1,148 @@
+@startuml
+!theme plain
+skinparam classAttributeIconSize 0
+
+package "domain.model" {
+  class Usuario {
+    +Long id
+    +String email
+    +String telefone
+    +String nome
+    +TipoPerfil perfil
+    +long saldoMoedas
+    +Long instituicaoId
+    +String nomeInstituicao
+    +String chaveSemestreUltimaDistribuicao
+  }
+
+  class Instituicao {
+    +Long id
+    +String nome
+  }
+
+  class Vantagem {
+    +Long id
+    +long parceiroId
+    +String titulo
+    +String descricao
+    +long custoEmMoedas
+    +String fotoUrl
+    +String parceiroNome
+    +String parceiroEmail
+    +String parceiroTelefone
+  }
+
+  class TransacaoResumo {
+    +Long id
+    +TransacaoTipo tipo
+    +long quantidade
+    +String mensagem
+    +String contatoRelacionado
+    +String cupom
+    +Instant criadoEm
+  }
+
+  enum TipoPerfil {
+    ALUNO
+    PROFESSOR
+    PARCEIRO
+  }
+
+  enum TransacaoTipo {
+    ENVIO
+    RESGATE
+  }
+}
+
+package "domain.port" {
+  interface UsuarioPersistenciaPort {
+    +salvarNovo(dados)
+    +buscarPorId(id)
+    +buscarPorIdComPerfil(id, perfis)
+    +definirSaldo(usuarioId, saldoNovo)
+    +atualizarSaldos(professorId, professorNovo, alunoId, alunoNovo)
+    +listarPorInstituicao(instituicaoId, perfil, busca, pageable)
+  }
+
+  interface TransacaoPort {
+    +registrarEnvio(idProfessor, idAluno, quantidade, mensagem)
+    +registrarResgate(idAluno, vantagemId, quantidade, cupom, nota)
+    +listarExtratoAluno(alunoId, pageable)
+    +listarExtratoProfessor(professorId, pageable)
+  }
+
+  interface VantagemPort {
+    +salvar(parceiroId, titulo, descricao, custo, fotoUrl)
+    +atualizar(id, parceiroId, titulo, descricao, custo, fotoUrl)
+    +remover(id, parceiroId)
+    +buscarPorId(id)
+    +listarTodas(pageable)
+    +listarDoParceiro(parceiroId)
+  }
+}
+
+package "application" {
+  class TransacaoFachada {
+    +obterSaldoProfessorComSemestre(professorId)
+    +enviarMoedas(professorId, alunoId, quantidade, justificativa)
+    +extratoAluno(alunoId, page)
+    +extratoProfessor(profId, page)
+  }
+
+  class ResgateAplicacao {
+    +resgatar(alunoId, vantagemId)
+    +listarVantagens(pageable)
+  }
+
+  class TransacaoFabrica {
+    +novoEnvio(quantidade, justificativa)
+    +novoResgate(custo, cupom)
+  }
+
+  interface NotificacaoEstrategiaPort {
+    +notificarEnvioMoedas(aluno, professor, quantidade, justificativa)
+    +notificarResgate(aluno, vantagem, cupom, transacao)
+  }
+
+  class NotificacaoAplicada {
+    +notificarEnvioMoedas(aluno, professor, quantidade, justificativa)
+    +notificarResgate(aluno, vantagem, cupom, transacao)
+  }
+}
+
+package "infrastructure.notification" {
+  record EmailNotificationMessage
+  interface EmailNotificationPublisher
+  class RabbitEmailNotificationPublisher
+  class RabbitNotificationWorker
+  class EmailJsClient
+  class ZapSenderClient
+  class CupomQrCodeServico
+}
+
+Instituicao "1" <-- "0..*" Usuario : pertence
+Usuario "1" <-- "0..*" Vantagem : parceiro
+Usuario "1" <-- "0..*" TransacaoResumo : aluno/professor
+Vantagem "0..1" <-- "0..*" TransacaoResumo : resgate
+
+Usuario --> TipoPerfil
+TransacaoResumo --> TransacaoTipo
+
+TransacaoFachada --> UsuarioPersistenciaPort
+TransacaoFachada --> TransacaoPort
+TransacaoFachada --> NotificacaoEstrategiaPort
+TransacaoFachada --> TransacaoFabrica
+
+ResgateAplicacao --> UsuarioPersistenciaPort
+ResgateAplicacao --> TransacaoPort
+ResgateAplicacao --> VantagemPort
+ResgateAplicacao --> NotificacaoEstrategiaPort
+
+RabbitEmailNotificationPublisher ..|> EmailNotificationPublisher
+RabbitNotificationWorker --> EmailJsClient
+RabbitNotificationWorker --> ZapSenderClient
+NotificacaoAplicada ..|> NotificacaoEstrategiaPort
+NotificacaoAplicada --> EmailNotificationPublisher
+NotificacaoAplicada --> CupomQrCodeServico
+
+@enduml

@@ -6,7 +6,7 @@ import type { Vantagem } from "@/api/types";
 import { VoltarLink } from "@/components/VoltarLink";
 
 const inputClass =
-  "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-[#820AD1] focus:ring-1 focus:ring-[#820AD1]";
+  "input-modern px-4 py-3 placeholder:text-gray-400 disabled:opacity-60";
 
 function limparFormulario() {
   return { tit: "", desc: "", custo: 1 };
@@ -106,13 +106,16 @@ export function ParceiroVantagensPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="mx-auto max-w-6xl space-y-8 animate-soft-in">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#7817d6]">
+            Parceiro
+          </p>
+          <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight text-slate-950">
             Gerir ofertas
           </h1>
-          <p className="mt-1 max-w-xl text-gray-600">
+          <p className="mt-2 max-w-xl text-slate-500">
             Publique vantagens para os alunos resgatarem com moedas. Pode editar
             título, descrição ou custo a qualquer momento.
           </p>
@@ -133,10 +136,10 @@ export function ParceiroVantagensPage() {
         <section className="lg:col-span-5">
           <form
             onSubmit={enviar}
-            className="space-y-5 rounded-3xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8"
+            className="app-card-solid space-y-5 rounded-[2rem] p-6 sm:p-8"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-lg font-bold text-gray-900">
+              <h2 className="font-display text-xl font-extrabold text-slate-950">
                 {editandoId != null ? "Editar oferta" : "Nova oferta"}
               </h2>
               {editandoId != null && (
@@ -209,7 +212,7 @@ export function ParceiroVantagensPage() {
             <button
               type="submit"
               disabled={salvando}
-              className="w-full rounded-full bg-[#820AD1] px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#6D08B1] enabled:active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              className="btn-primary w-full px-6 py-3.5 text-sm disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
               {salvando
                 ? "A guardar…"
@@ -245,7 +248,7 @@ export function ParceiroVantagensPage() {
             {lista.map((v) => (
               <li
                 key={v.id}
-                className={`rounded-2xl border bg-white p-5 shadow-sm transition-colors ${
+                className={`app-card-solid rounded-2xl border p-5 transition-colors ${
                   editandoId === v.id
                     ? "border-[#820AD1] ring-1 ring-[#820AD1]/25"
                     : "border-gray-100 hover:border-gray-200"

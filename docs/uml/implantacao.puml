@@ -1,0 +1,40 @@
+@startuml
+!theme plain
+title Diagrama de Implantacao - PUC Coin Release 3
+
+node "Cliente" {
+  artifact "Browser" as browser
+}
+
+node "Container Web" {
+  artifact "SPA React/Vite\nNginx" as web
+}
+
+node "Container API" {
+  artifact "Spring Boot API" as api
+  artifact "Worker RabbitMQ" as worker
+  artifact "ZXing QR Code" as zxing
+}
+
+database "PostgreSQL" as db
+queue "RabbitMQ" as rabbit
+cloud "EmailJS" as emailjs
+cloud "ZapSender" as zapsender
+
+browser --> web : HTTPS/HTTP
+web --> api : /api/v1
+api --> db : JDBC
+api --> zxing : gera QR Code do cupom
+api --> rabbit : publica eventos
+rabbit --> worker : consome fila
+worker --> emailjs : envia e-mails
+worker --> zapsender : WhatsApp opcional
+
+note right of emailjs
+  Templates:
+  aluno, professor,
+  resgate aluno e
+  resgate parceiro.
+end note
+
+@enduml

@@ -48,6 +48,11 @@ app:
       api-url: ${EMAILJS_API_URL:https://api.emailjs.com/api/v1.0/email/send}
       service-id: ${EMAILJS_SERVICE_ID:}
       template-id: ${EMAILJS_TEMPLATE_ID:}
+      template-aluno-id: ${EMAILJS_TEMPLATE_ALUNO_ID:}
+      template-professor-id: ${EMAILJS_TEMPLATE_PROFESSOR_ID:}
+      template-parceiro-id: ${EMAILJS_TEMPLATE_PARCEIRO_ID:}
+      template-resgate-aluno-id: ${EMAILJS_TEMPLATE_RESGATE_ALUNO_ID:${EMAILJS_TEMPLATE_ALUNO_ID:}}
+      template-resgate-parceiro-id: ${EMAILJS_TEMPLATE_RESGATE_PARCEIRO_ID:${EMAILJS_TEMPLATE_PARCEIRO_ID:}}
       public-key: ${EMAILJS_PUBLIC_KEY:}
       private-key: ${EMAILJS_PRIVATE_KEY:}
     zapsender:

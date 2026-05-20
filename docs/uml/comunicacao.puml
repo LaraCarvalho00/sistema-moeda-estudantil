@@ -1,0 +1,35 @@
+@startuml
+!theme plain
+title Diagrama de Comunicacao - Resgate com Cupom e QR Code
+
+object "aluno:Aluno" as aluno
+object "spa:SPA React" as spa
+object "controle:ControleVantagensResgate" as controle
+object "resgate:ResgateAplicacao" as resgate
+object "vantagens:VantagemPort" as vantagens
+object "usuarios:UsuarioPersistenciaPort" as usuarios
+object "transacoes:TransacaoPort" as transacoes
+object "notificacao:NotificacaoAplicada" as notificacao
+object "qr:CupomQrCodeServico" as qr
+queue "rabbit:RabbitMQ" as rabbit
+object "worker:RabbitNotificationWorker" as worker
+cloud "emailjs:EmailJS" as emailjs
+actor "parceiro:Empresa Parceira" as parceiro
+
+aluno --> spa : 1. seleciona vantagem
+spa --> controle : 2. POST /alunos/resgatar-vantagem/{id}
+controle --> resgate : 3. resgatar(alunoId, vantagemId)
+resgate --> usuarios : 3.1 buscar aluno
+resgate --> vantagens : 3.2 buscar vantagem/parceiro
+resgate --> usuarios : 3.3 descontar saldo
+resgate --> transacoes : 3.4 registrar resgate/cupom
+resgate --> notificacao : 3.5 notificarResgate(...)
+notificacao --> qr : 3.5.1 gerar QR Code unico
+notificacao --> rabbit : 3.5.2 publicar e-mail aluno
+notificacao --> rabbit : 3.5.3 publicar e-mail parceiro
+rabbit --> worker : 4. consumir mensagens
+worker --> emailjs : 5. enviar e-mails com cupom + QR
+emailjs --> aluno : 6. cupom para troca presencial
+emailjs --> parceiro : 7. codigo de conferencia
+
+@enduml

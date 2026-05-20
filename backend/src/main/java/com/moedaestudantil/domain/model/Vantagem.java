@@ -13,4 +13,6 @@ public class Vantagem {
   long custoEmMoedas;
   String fotoUrl;
   String parceiroNome;
+  String parceiroEmail;
+  String parceiroTelefone;
 }

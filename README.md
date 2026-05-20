@@ -1,8 +1,8 @@
 # Sistema de Moeda Estudantil
 
-> Atualizacao: o projeto agora usa RabbitMQ para fila de notificacoes e um worker para enviar e-mail via EmailJS e WhatsApp via ZapSender.
+> Release 3: o projeto usa RabbitMQ para fila de notificacoes, EmailJS para e-mails, ZapSender para WhatsApp opcional e QR Code unico nos cupons de resgate.
 
-**Monorepo** de **API REST (Spring Boot)** + **SPA (React, Vite, TypeScript)** com **PostgreSQL** e **RabbitMQ**: moedas virtuais emitidas por professores, resgate de vantagens por alunos e cadastro/gestão por parceiros. Autenticação **JWT** (stateless) e notificações assíncronas via **EmailJS** e **ZapSender**. Projeto de **laboratório de software** com histórias e diagramas em `docs/uml/`.
+**Monorepo** de **API REST (Spring Boot)** + **SPA (React, Vite, TypeScript)** com **PostgreSQL** e **RabbitMQ**: moedas virtuais emitidas por professores, resgate de vantagens por alunos e cadastro/gestão por parceiros. Autenticação **JWT** (stateless), notificações assíncronas via **EmailJS** e **ZapSender** e cupons com **QR Code** gerado no backend. Projeto de **laboratório de software** com histórias e diagramas em `docs/uml/`.
 
 <div align="center">
 
@@ -21,7 +21,7 @@
 
 ---
 
-> **TL;DR** | **O quê:** fidelidade acadêmica com saldo, extrato e vantagens. | **Quem:** professores, alunos, parceiros (RBAC). | **Dados:** PostgreSQL; crédito semestral e chave de semestre em `America/Sao_Paulo`. | **Mensagens:** RabbitMQ + worker para EmailJS/ZapSender. | **Lógica de negócio** só no servidor.
+> **TL;DR** | **O quê:** fidelidade acadêmica com saldo, extrato, vantagens e cupom com QR Code. | **Quem:** professores, alunos, parceiros (RBAC). | **Dados:** PostgreSQL; crédito semestral e chave de semestre em `America/Sao_Paulo`. | **Mensagens:** RabbitMQ + EmailJS/ZapSender. | **Lógica de negócio** só no servidor.
 
 ---
 
@@ -50,7 +50,7 @@
 - **Regra central:** a cada **novo semestre lógico**, o professor recebe **+1.000 moedas** (atualização de saldo ao consultar enviar, conforme `TransacaoFachada` e [`SemestreUtil`](backend/src/main/java/com/moedaestudantil/application/SemestreUtil.java)).
 - **Semestre** no código: chave `AAAA-S` (ex.: `2026-1` jan–jun, `2026-2` jul–dez) no fuso `America/Sao_Paulo`.
 - **Envio de moedas:** apenas para **aluno da mesma instituição**; **justificativa obrigatória**; validação de saldo.
-- **Resgate:** aluno consome vantagem de parceiro; sistema registra trânsito e identificador de resgate; e-mail se `MAIL_ENABLED=true` e SMTP válido.
+- **Resgate:** aluno consome vantagem de parceiro; sistema registra transacao, cupom e QR Code unico; notificacoes para aluno e parceiro seguem por RabbitMQ quando EmailJS/ZapSender estiverem configurados.
 
 **Glossário**
 
@@ -66,14 +66,14 @@ A SPA chama somente a API; regras críticas **não** dependem de validação exc
 
 ## Funcionalidades
 
-Atualizacao de notificacoes: envio de moedas e resgate de premio agora publicam eventos no RabbitMQ. O worker envia e-mail via EmailJS e WhatsApp via ZapSender quando as respectivas credenciais estao configuradas.
+Release 3: envio de moedas e resgate de premio publicam eventos no RabbitMQ. O resgate gera QR Code unico no cupom e envia e-mail ao aluno e ao parceiro via EmailJS; WhatsApp segue opcional via ZapSender quando houver telefone e credenciais configuradas.
 
 - **Registro e login** – Cadastro por perfil, instituição, JWT no client (`accessToken`).
 - **Crédito semestral (professor)** – Garantia automática de **1.000 moedas** por semestre ao trocar a chave; saldo e extrato.
-- **Envio de moedas** – Professor seleciona aluno da mesma instituição, quantidade e justificativa; notificação opcional ao aluno.
+- **Envio de moedas** – Professor seleciona aluno da mesma instituição, quantidade e justificativa; aluno e professor recebem notificacao quando as integracoes estiverem ligadas.
 - **Catálogo de vantagens** – Listagem (páginas Spring); parceiros mantêm ofertas conforme controladores de parceiro.
-- **Resgate (aluno)** – Débito e registro de resgate (cupom); regras no backend.
-- **E-mail (opcional)** – *Feature flag* `MAIL_ENABLED`; desligado no dev sem SMTP.
+- **Resgate (aluno)** – Debito e registro de resgate; cupom com QR Code unico; aluno e parceiro recebem e-mail de conferencia.
+- **Notificacoes assincronas** – RabbitMQ desacopla o caso de uso dos envios via EmailJS e ZapSender, incluindo cupons de resgate.
 - **Interface SPA** – React + Vite, rotas, fachadas TypeScript em `frontend/src/api` (fetch + `Authorization`).
 
 *Sugestão de README:* adicione em `docs/` capturas da home, login, extrato e tela de envio — o repositório ainda não versiona *screenshots* (opcional, como no projeto de referência).
@@ -91,6 +91,7 @@ flowchart LR
   C[Parceiro] --> SPA
   SPA --> API[API Spring Boot]
   API --> DB[(PostgreSQL)]
+  API --> QR[Gerador QR Code ZXing]
   API --> MQ[(RabbitMQ)]
   MQ --> W[Worker notificacoes]
   W --> E[EmailJS]
@@ -137,6 +138,7 @@ flowchart LR
 | **RabbitMQ** | Fila de notificações e worker assíncrono. |
 | **EmailJS** | Envio de e-mails via API REST. |
 | **ZapSender** | Envio opcional de mensagens WhatsApp. |
+| **ZXing** | Geracao do QR Code unico para cupons de resgate. |
 | **Lombok** | `domain` e redução de *boilerplate* (imutáveis, etc.). |
 | **React 18 + TypeScript + Vite 5** | SPA e build. |
 | **Tailwind CSS 3** | Estilos. |
@@ -158,6 +160,7 @@ Versões de starters gerenciadas pelo **POM parent** `spring-boot-starter-parent
 | `org.springframework.boot` | `spring-boot-starter-validation` | Bean Validation (`@Valid`, etc.). |
 | `org.springframework.boot` | `spring-boot-starter-amqp` | RabbitMQ, publisher e worker com `@RabbitListener`. |
 | `org.springframework.boot` | `spring-boot-starter-mail` | Dependência histórica de e-mail; notificações novas usam EmailJS via REST. |
+| `com.google.zxing` | `core` | Geracao do QR Code unico enviado no cupom da Release 3. |
 | `org.postgresql` | `postgresql` | Driver JDBC. |
 | `io.jsonwebtoken` | `jjwt-api` / `jjwt-impl` / `jjwt-jackson` | **0.12.5** – JWT. |
 | `org.projectlombok` | `lombok` | Anotações. |
@@ -176,8 +179,8 @@ sistema-moeda-estudantil/
 │   └── src/main/java/com/moedaestudantil/
 │       ├── MoedaEstudantilApplication.java
 │       ├── domain/           # modelos, portas
-│       ├── application/      # fachadas, SemestreUtil, fabricas, estratégias
-│       ├── infrastructure/   # JPA, segurança JWT, mail, seed
+│       ├── application/      # fachadas, SemestreUtil, fabricas, estrategias
+│       ├── infrastructure/   # JPA, seguranca JWT, RabbitMQ, EmailJS/ZapSender, seed
 │       └── web/              # REST, DTOs, handlers
 │   └── src/main/resources/
 │       ├── application.yaml
@@ -188,8 +191,8 @@ sistema-moeda-estudantil/
 │   ├── nginx.docker.conf   # proxy /api no contêiner web
 │   ├── vite.config.ts
 │   └── src/                  # app, features, api, assets
-├── docs/uml/                 # histórias, PlantUML, índice
-└── docker-compose.yml        # Postgres + API + SPA (`docker compose up -d db` = só o banco)
+├── docs/uml/                 # historias, PlantUML, indice
+└── docker-compose.yml        # Postgres + RabbitMQ + API + SPA
 ```
 
 ---
@@ -202,9 +205,9 @@ O fluxo central de **envio de moedas** está em [`TransacaoFachada`](backend/src
 2. **Validar ligação professor–aluno** – `instituicaoId` deve coincidir; caso contrário, `RegraDeNegocio` (erro 422 no handler).
 3. **Criar lote de envio** – `TransacaoFabrica` com quantidade e justificativa; checagem de saldo suficiente.
 4. **Atualizar saldos** – Débito no professor, crédito no aluno (transação).
-5. **Auditoria e notificação** – Registro de transação + *strategy* de notificação se e-mail ativo.
+5. **Auditoria e notificacao** – Registro de transacao + publicacao de evento no RabbitMQ apos commit; o worker envia EmailJS/ZapSender conforme configuracao.
 
-**Resgate e parceiro** – Controladores no pacote `web` (ex.: [`ControleVantagensResgate`](backend/src/main/java/com/moedaestudantil/web/ControleVantagensResgate.java)) aplicam o mesmo padrão: regra na aplicação, persistência em portas, autorização por perfil.
+**Resgate e parceiro** – Controladores no pacote `web` (ex.: [`ControleVantagensResgate`](backend/src/main/java/com/moedaestudantil/web/ControleVantagensResgate.java)) aplicam o mesmo padrão: regra na aplicação, persistência em portas, autorização por perfil. O cupom recebe QR Code unico via ZXing antes da publicacao dos eventos para aluno e parceiro.
 
 ---
 
@@ -216,7 +219,8 @@ O backend publica eventos de notificacao depois que a transacao de negocio confi
 
 ```mermaid
 flowchart LR
-  API[API Spring Boot] -->|publica evento| MQ[(RabbitMQ)]
+  API[API Spring Boot] -->|gera QR do cupom| QR[ZXing QR Code]
+  API -->|publica evento| MQ[(RabbitMQ)]
   MQ -->|consome fila| W[Worker Spring]
   W -->|email| E[EmailJS]
   W -->|WhatsApp| Z[ZapSender]
@@ -228,7 +232,8 @@ flowchart LR
 |--------|--------------|--------------------|
 | Professor envia moedas | Aluno | Quantidade recebida, professor, justificativa e saldo atualizado |
 | Professor envia moedas | Professor | Quantidade enviada, aluno, justificativa e saldo atualizado |
-| Aluno resgata premio | Aluno | Item retirado, cupom e saldo atualizado |
+| Aluno resgata premio | Aluno | Item retirado, cupom, QR Code unico e saldo atualizado |
+| Aluno resgata premio | Parceiro | Item retirado, aluno, codigo de conferencia e QR Code unico |
 
 ### RabbitMQ
 
@@ -255,12 +260,19 @@ Para enviar e-mails reais, configure:
 EMAILJS_ENABLED=true
 EMAILJS_API_URL=https://api.emailjs.com/api/v1.0/email/send
 EMAILJS_SERVICE_ID=seu_service_id
-EMAILJS_TEMPLATE_ID=seu_template_id
+EMAILJS_TEMPLATE_ID=template_padrao_opcional
+EMAILJS_TEMPLATE_ALUNO_ID=template_aluno
+EMAILJS_TEMPLATE_PROFESSOR_ID=template_professor
+EMAILJS_TEMPLATE_PARCEIRO_ID=template_parceiro
+EMAILJS_TEMPLATE_RESGATE_ALUNO_ID=template_resgate_aluno
+EMAILJS_TEMPLATE_RESGATE_PARCEIRO_ID=template_resgate_parceiro
 EMAILJS_PUBLIC_KEY=sua_public_key
 EMAILJS_PRIVATE_KEY=sua_private_key_opcional
 ```
 
-No template do EmailJS, use variaveis como:
+Para a entrega Lab04S01, use templates separados para aluno e professor. O guia com os corpos sugeridos esta em [docs/emailjs_templates.md](docs/emailjs_templates.md).
+
+Nos templates do EmailJS, use variaveis como:
 
 ```text
 {{to_email}}
@@ -271,6 +283,10 @@ No template do EmailJS, use variaveis como:
 {{saldo_atualizado}}
 {{item_retirado}}
 {{cupom}}
+{{codigo_conferencia}}
+{{qr_code_payload}}
+{{qr_code_data_uri}}
+{{qr_code_img}}
 ```
 
 ### ZapSender / WhatsApp
@@ -356,17 +372,17 @@ curl -s http://localhost:8080/api/v1/auth/eu \
 - **Java 17+**
 - **Maven 3.8+** (ou IDE com import do `pom.xml`)
 - **Node.js 18+** (LTS) e **npm**
-- **Docker** (opcional: só Postgres em dev **ou** stack completo — ver [Tudo no Docker](#tudo-no-docker-postgres-api-e-spa)) **ou** PostgreSQL 14+ local
+- **Docker** (opcional: Postgres + RabbitMQ em dev **ou** stack completa — ver [Tudo no Docker](#tudo-no-docker-postgres-api-rabbitmq-e-spa)) **ou** PostgreSQL 14+ local
 
-### Passos (ordem: banco → API → *front*)
+### Passos (ordem: infraestrutura → API → *front*)
 
-1. **Banco**
+1. **Infraestrutura local**
 
    ```bash
-   docker compose up -d
+   docker compose up -d db rabbitmq
    ```
 
-   Credenciais padrão do [docker-compose.yml](docker-compose.yml): `moeda` / `moeda`, database `moeda`, porta **5432**.
+   Postgres: `moeda` / `moeda`, database `moeda`, porta **5432**. RabbitMQ: `moeda` / `moeda`, AMQP **5672**, painel **15672**.
 
 2. **API** (pasta `backend/`)
 
@@ -383,7 +399,7 @@ curl -s http://localhost:8080/api/v1/auth/eu \
 
 4. **Acesse** a SPA: **http://localhost:5173** (em dev, proxy envia `/api` para a API na **8080**).
 
-### Tudo no Docker: Postgres, API e SPA
+### Tudo no Docker: Postgres, API, RabbitMQ e SPA
 
 Com o **Docker Desktop** (ou daemon) em execução, na raiz do repositório:
 
@@ -394,6 +410,7 @@ docker compose up --build -d
 - **Interface:** http://localhost:5173 — o Nginx do contêiner `web` serve o build estático e encaminha `/api` para a API (mesmo fluxo relativo do `VITE_API_BASE` vazio).
 - **API direta (opcional):** http://localhost:8080  
 - **Postgres:** porta **5432** no host (`moeda` / `moeda`, base `moeda`).
+- **RabbitMQ:** AMQP em `localhost:5672` e painel em http://localhost:15672 (`moeda` / `moeda`).
 
 Para encerrar: `docker compose down`. Logs: `docker compose logs -f api` ou `web`.
 
@@ -445,8 +462,10 @@ Fonte: [`application.yaml`](backend/src/main/resources/application.yaml) e [`.en
 | `JWT_EXPIRATION_MIN` / `app.jwt.expiration-minutes` | API | Validade (min) |
 | `API_BASE_URL` | API | Base pública, default `http://localhost:8080` |
 | `PORT` | API | Porta do servlet (padrão **8080**; muitas plataformas injetam `PORT`) |
-| `MAIL_ENABLED` | API | `true` liga e-mail |
-| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` | API | SMTP |
+| `RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD` | API | Conexao com RabbitMQ |
+| `NOTIFICATIONS_RABBIT_ENABLED` | API | `true` publica/consome fila de notificacoes |
+| `EMAILJS_ENABLED`, `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, `EMAILJS_TEMPLATE_ALUNO_ID`, `EMAILJS_TEMPLATE_PROFESSOR_ID`, `EMAILJS_TEMPLATE_PARCEIRO_ID`, `EMAILJS_TEMPLATE_RESGATE_ALUNO_ID`, `EMAILJS_TEMPLATE_RESGATE_PARCEIRO_ID`, `EMAILJS_PUBLIC_KEY`, `EMAILJS_PRIVATE_KEY` | API | Envio de e-mail via EmailJS |
+| `ZAPSENDER_ENABLED`, `ZAPSENDER_API_URL`, `ZAPSENDER_TOKEN` | API | Envio opcional de WhatsApp |
 | `VITE_API_BASE` | *Build* do front | URL base da API em produção (cross-origin) |
 
 O Spring **não** lê `.env` automaticamente; use shell, IDE ou o provedor de *deploy*.
@@ -472,8 +491,10 @@ O Spring **não** lê `.env` automaticamente; use shell, IDE ou o provedor de *d
 
 ## Documentação UML
 
+- [Plano de entregas Lab03, Release 02 e Release 03](docs/plano_labs_release02.md)
+- [Templates EmailJS e QR Code de cupom](docs/emailjs_templates.md)
 - [Histórias de usuário](docs/uml/historias_de_usuario.md)
-- [Índice PlantUML e exportação](docs/uml/README.md) — casos de uso, domínio, componentes, sequência.
+- [Índice PlantUML e exportação](docs/uml/README.md) — casos de uso, domínio, componentes, sequência, comunicação e implantação.
 
 ### Git: commits e sprints
 

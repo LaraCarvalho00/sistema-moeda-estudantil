@@ -4,6 +4,7 @@ import { moedasFachada } from "@/api/moedasFachada";
 import { useAuth } from "@/features/auth/AuthContext";
 import type { TransacaoResumo } from "@/api/types";
 import { VoltarLink } from "@/components/VoltarLink";
+import { CoinBadge } from "@/components/FeedbackAnimations";
 
 export function ExtratoPage() {
   const { usuario, carregando } = useAuth();
@@ -25,82 +26,150 @@ export function ExtratoPage() {
     void carregar();
   }, [carregar]);
 
-  if (carregando) return <p className="text-gray-400">Carregando extrato...</p>;
+  if (carregando) return <p className="text-slate-500">Carregando extrato...</p>;
   if (!usuario) return <Navigate to="/entrar" replace />;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      {/* Cabeçalho */}
+    <div className="mx-auto max-w-4xl space-y-6 animate-soft-in">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-gray-900">Histórico</h1>
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#7817d6]">
+            Movimentacoes
+          </p>
+          <h1 className="mt-2 font-display text-4xl font-extrabold text-slate-950">
+            Extrato
+          </h1>
+        </div>
         <VoltarLink />
       </div>
 
       {erro && (
-        <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-medium">
+        <div className="rounded-3xl border border-red-100 bg-red-50 p-4 text-sm font-bold text-red-700">
           {erro}
         </div>
       )}
 
       {itens.length === 0 ? (
-        <div className="bg-white p-10 rounded-3xl text-center border border-gray-100 shadow-sm">
-          <p className="text-gray-400">Nenhuma movimentação por aqui ainda. 🌱</p>
+        <div className="app-card rounded-[2rem] p-10 text-center">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm">
+            <CoinBadge className="h-14 w-14" />
+          </div>
+          <p className="mt-5 font-display text-2xl font-extrabold text-slate-950">
+            Nenhuma movimentacao ainda.
+          </p>
+          <p className="mt-2 text-slate-500">
+            Assim que moedas forem enviadas ou vantagens resgatadas, tudo
+            aparece aqui.
+          </p>
         </div>
       ) : (
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-          <ul className="divide-y divide-gray-50">
-            {itens.map((t) => (
-              <li
-                key={t.id}
-                className="flex items-center gap-4 px-6 py-5 hover:bg-gray-50 transition-colors"
-              >
-                {/* Ícone Indicador de Entrada/Saída */}
-                <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
-                  t.tipo === "ENVIO" ? "bg-blue-50 text-blue-600" : "bg-green-50 text-green-600"
-                }`}>
-                  {t.tipo === "ENVIO" ? "↑" : "↓"}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-bold text-gray-900">
-                        {t.tipo === "ENVIO" ? "Transferência enviada" : "Moedas recebidas"}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {t.contatoRelacionado || "Sistema Estudantil"}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className={`text-sm font-bold ${
-                        t.tipo === "ENVIO" ? "text-gray-900" : "text-green-600"
-                      }`}>
-                        {t.tipo === "ENVIO" ? `-${t.quantidade}` : `+${t.quantidade}`} moedas
-                      </p>
-                      <p className="text-[10px] text-gray-400 uppercase font-semibold">
-                        {t.criadoEm && new Date(t.criadoEm).toLocaleDateString("pt-BR", { day: '2-digit', month: 'short' })}
-                      </p>
-                    </div>
+        <div className="app-card-solid overflow-hidden rounded-[2rem]">
+          <ul className="divide-y divide-slate-100">
+            {itens.map((t, index) => {
+              const meta = detalhesTransacao(t, usuario.perfil);
+              return (
+                <li
+                  key={t.id}
+                  className="grid gap-4 px-5 py-5 transition-colors hover:bg-[#fbf7ef] sm:grid-cols-[auto_1fr_auto]"
+                  style={{ animationDelay: `${index * 45}ms` }}
+                >
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-2xl ${meta.iconClass}`}
+                    aria-hidden="true"
+                  >
+                    {meta.symbol}
                   </div>
 
-                  {/* Mensagem da transação */}
-                  {t.mensagem && (
-                    <div className="mt-2 p-2 bg-gray-50 rounded-lg border-l-2 border-gray-200">
-                      <p className="text-xs italic text-gray-600">"{t.mensagem}"</p>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-display text-base font-extrabold text-slate-950">
+                        {meta.title}
+                      </p>
+                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
+                        {t.tipo}
+                      </span>
                     </div>
-                  )}
-
-                  {t.cupom && (
-                    <p className="mt-1 text-[10px] font-mono font-bold text-[#820AD1]">
-                      CUPOM: {t.cupom}
+                    <p className="mt-1 truncate text-sm font-medium text-slate-500">
+                      {t.contatoRelacionado || "Sistema PUC Coin"}
                     </p>
-                  )}
-                </div>
-              </li>
-            ))}
+
+                    {t.mensagem && (
+                      <div className="mt-3 rounded-2xl border-l-4 border-[#f4c74a] bg-[#fff7dc] px-4 py-3">
+                        <p className="text-sm italic leading-relaxed text-slate-700">
+                          "{t.mensagem}"
+                        </p>
+                      </div>
+                    )}
+
+                    {t.cupom && (
+                      <div className="mt-3 inline-flex flex-wrap items-center gap-2 rounded-2xl border border-[#7817d6]/15 bg-[#efe2fb] px-3 py-2">
+                        <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#4b0d82]">
+                          Cupom
+                        </span>
+                        <span className="font-mono text-sm font-black text-[#4b0d82]">
+                          {t.cupom}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="text-left sm:text-right">
+                    <p className={`font-display text-xl font-extrabold ${meta.amountClass}`}>
+                      {meta.prefix}
+                      {t.quantidade}
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+                      moedas
+                    </p>
+                    {t.criadoEm && (
+                      <p className="mt-2 text-xs font-semibold text-slate-400">
+                        {new Date(t.criadoEm).toLocaleDateString("pt-BR", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
     </div>
   );
+}
+
+function detalhesTransacao(
+  t: TransacaoResumo,
+  perfil: "ALUNO" | "PROFESSOR" | "PARCEIRO",
+) {
+  if (t.tipo === "RESGATE") {
+    return {
+      title: "Vantagem resgatada",
+      prefix: "-",
+      symbol: "R",
+      amountClass: "text-[#9f5f00]",
+      iconClass: "bg-[#fff7dc] text-[#9f5f00]",
+    };
+  }
+
+  if (perfil === "PROFESSOR") {
+    return {
+      title: "Moedas enviadas",
+      prefix: "-",
+      symbol: "-",
+      amountClass: "text-slate-950",
+      iconClass: "bg-slate-100 text-slate-700",
+    };
+  }
+
+  return {
+    title: "Moedas recebidas",
+    prefix: "+",
+    symbol: "+",
+    amountClass: "text-green-700",
+    iconClass: "bg-green-50 text-green-700",
+  };
 }

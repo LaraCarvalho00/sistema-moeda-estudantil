@@ -15,15 +15,15 @@ class EmailJsClient {
   private final RestClient restClient = RestClient.create();
   private long ultimoEnvioMs;
 
-  boolean prontoParaEnviar() {
-    return properties.enabled() && properties.configurado();
+  boolean prontoParaEnviar(EmailNotificationMessage mensagem) {
+    return properties.enabled() && properties.configurado() && properties.temTemplatePara(mensagem.type());
   }
 
   synchronized void enviar(EmailNotificationMessage mensagem) {
     aguardarLimiteEmailJs();
     Map<String, Object> corpo = new LinkedHashMap<>();
     corpo.put("service_id", properties.serviceId());
-    corpo.put("template_id", properties.templateId());
+    corpo.put("template_id", properties.templateIdPara(mensagem.type()));
     corpo.put("user_id", properties.publicKey());
     corpo.put("template_params", mensagem.parametrosEmailJs());
     if (properties.temChavePrivada()) {

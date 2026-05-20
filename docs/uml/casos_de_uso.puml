@@ -1,0 +1,70 @@
+@startuml
+!theme plain
+left to right direction
+
+actor Aluno
+actor Professor
+actor "Empresa Parceira" as Parceiro
+actor "EmailJS" as EmailJS
+actor "ZapSender" as ZapSender
+
+rectangle "PUC Coin" {
+  usecase "Cadastrar usuario" as UC_Cadastro
+  usecase "Entrar no sistema" as UC_Login
+  usecase "Consultar saldo" as UC_Saldo
+  usecase "Enviar moedas" as UC_Enviar
+  usecase "Consultar extrato" as UC_Extrato
+  usecase "Listar alunos da instituicao" as UC_ListarAlunos
+  usecase "Cadastrar vantagem" as UC_CriarVantagem
+  usecase "Editar/remover vantagem" as UC_ManterVantagem
+  usecase "Listar vantagens" as UC_ListarVantagens
+  usecase "Resgatar vantagem" as UC_Resgatar
+  usecase "Registrar transacao" as UC_Registrar
+  usecase "Gerar QR Code do cupom" as UC_QR
+  usecase "Publicar notificacao" as UC_Notificar
+  usecase "Enviar e-mail" as UC_Email
+  usecase "Enviar cupom ao parceiro" as UC_CupomParceiro
+  usecase "Enviar WhatsApp" as UC_WhatsApp
+}
+
+Aluno --> UC_Cadastro
+Aluno --> UC_Login
+Aluno --> UC_Extrato
+Aluno --> UC_ListarVantagens
+Aluno --> UC_Resgatar
+
+Professor --> UC_Cadastro
+Professor --> UC_Login
+Professor --> UC_Saldo
+Professor --> UC_Enviar
+Professor --> UC_Extrato
+Professor --> UC_ListarAlunos
+
+Parceiro --> UC_Cadastro
+Parceiro --> UC_Login
+Parceiro --> UC_CriarVantagem
+Parceiro --> UC_ManterVantagem
+
+UC_Enviar .> UC_ListarAlunos : <<include>>
+UC_Enviar .> UC_Registrar : <<include>>
+UC_Enviar .> UC_Notificar : <<include>>
+UC_Resgatar .> UC_ListarVantagens : <<include>>
+UC_Resgatar .> UC_Registrar : <<include>>
+UC_Resgatar .> UC_QR : <<include>>
+UC_Resgatar .> UC_Notificar : <<include>>
+UC_Resgatar .> UC_CupomParceiro : <<include>>
+UC_Notificar .> UC_Email : <<include>>
+UC_Notificar .> UC_WhatsApp : <<extend>>
+UC_CupomParceiro .> UC_Email : <<include>>
+
+EmailJS --> UC_Email
+ZapSender --> UC_WhatsApp
+Parceiro --> UC_CupomParceiro
+
+note right of UC_Notificar
+  Notificacao assincrona:
+  API publica no RabbitMQ e
+  o worker chama EmailJS/ZapSender.
+end note
+
+@enduml
