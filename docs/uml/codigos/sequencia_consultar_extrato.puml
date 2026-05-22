@@ -1,0 +1,29 @@
+@startuml
+autonumber
+actor "Usuário\n(Prof/Aluno)" as Usuario
+boundary "View" as UI
+control "ExtratoController" as Controller
+entity "TransacaoService" as Service
+database "TransacaoRepository" as DB
+
+Usuario -> UI: Acessa página de extrato
+activate UI
+UI -> Controller: solicitarExtrato(idUsuario)
+activate Controller
+
+Controller -> Service: buscarHistoricoTransacoes(idUsuario)
+activate Service
+
+Service -> DB: findByUsuarioId(idUsuario)
+activate DB
+DB --> Service: listaTransacoes
+deactivate DB
+
+Service --> Controller: listaFormatada
+deactivate Service
+
+Controller --> UI: exibirDadosExtrato(listaFormatada)
+deactivate Controller
+UI --> Usuario: Apresenta tabela com o extrato
+deactivate UI
+@enduml

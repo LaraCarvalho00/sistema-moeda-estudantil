@@ -1,0 +1,49 @@
+@startuml
+autonumber
+actor Professor
+boundary "View" as UI
+control "TransacaoController" as Controller
+entity "TransacaoService" as Service
+entity "EmailService\n(EmailJS)" as Email
+database "TransacaoRepository" as DB
+
+Professor -> UI: Seleciona aluno, insere valor e motivo
+activate UI
+UI -> Controller: enviarMoedas(idProf, idAluno, valor, motivo)
+activate Controller
+
+Controller -> Service: processarTransacao(idProf, idAluno, valor, motivo)
+activate Service
+
+Service -> DB: consultarSaldo(idProf)
+activate DB
+DB --> Service: saldoAtual
+deactivate DB
+
+alt Saldo Suficiente
+    Service -> DB: salvarTransacao(novaTransacao)
+    activate DB
+    DB --> Service: transacaoSalva
+    deactivate DB
+    
+    Service -> Email: enviarConfirmacao(idProf, templateProfessor)
+    activate Email
+    Email --> Service: emailEnviado
+    deactivate Email
+    
+    Service -> Email: enviarNotificacao(idAluno, templateAluno)
+    activate Email
+    Email --> Service: emailEnviado
+    deactivate Email
+
+    Service --> Controller: sucesso
+else Saldo Insuficiente
+    Service --> Controller: erroSaldo
+end
+deactivate Service
+
+Controller --> UI: retornarStatus(status)
+deactivate Controller
+UI --> Professor: Exibir mensagem (Sucesso/Erro)
+deactivate UI
+@enduml

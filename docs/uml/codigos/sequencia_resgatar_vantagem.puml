@@ -1,0 +1,59 @@
+@startuml
+autonumber
+actor Aluno
+boundary "View" as UI
+control "ResgateController" as Controller
+entity "TransacaoService" as Service
+entity "NotificacaoService" as Notificacao
+database "Database" as DB
+
+Aluno -> UI: Clica em "Resgatar"\n(seleciona vantagem)
+activate UI
+UI -> Controller: solicitarResgate(idAluno, idVantagem)
+activate Controller
+
+Controller -> Service: processarResgate(idAluno, idVantagem)
+activate Service
+
+Service -> DB: consultarSaldo(idAluno)
+activate DB
+DB --> Service: saldoAtual
+deactivate DB
+
+Service -> DB: obterCustoVantagem(idVantagem)
+activate DB
+DB --> Service: custoVantagem
+deactivate DB
+
+alt Saldo >= CustoVantagem
+    Service -> DB: deduzirSaldoESalvarTransacao()
+    activate DB
+    DB --> Service: transacaoConfirmada
+    deactivate DB
+    
+    Service -> Service: gerarCodigoResgate_QRCode()
+    
+    Service -> Notificacao: enviarCupomParceiro(idEmpresa, codigo)
+    activate Notificacao
+    Notificacao --> Service: ok
+    
+    Service -> Notificacao: enviarEmailAluno(idAluno, codigo, QRCode)
+    Notificacao --> Service: ok
+    
+    opt Envio WhatsApp
+        Service -> Notificacao: publicarNotificacaoWhatsApp(idAluno, codigo)
+        Notificacao --> Service: ok
+    end
+    deactivate Notificacao
+
+    Service --> Controller: resgateSucesso(codigo, QRCode)
+else Saldo Insuficiente
+    Service --> Controller: erroSaldoInsuficiente
+end
+deactivate Service
+
+Controller --> UI: exibirComprovanteOuErro()
+deactivate Controller
+UI --> Aluno: Mostra QR Code e confimação
+deactivate UI
+@enduml

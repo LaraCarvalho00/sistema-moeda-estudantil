@@ -1,0 +1,29 @@
+@startuml
+autonumber
+actor Aluno
+boundary "View" as UI
+control "VantagemController" as Controller
+entity "VantagemService" as Service
+database "VantagemRepository" as DB
+
+Aluno -> UI: Acessa catálogo de vantagens
+activate UI
+UI -> Controller: listarVantagensAtivas()
+activate Controller
+
+Controller -> Service: obterTodasVantagens()
+activate Service
+
+Service -> DB: findAll()
+activate DB
+DB --> Service: listaVantagens
+deactivate DB
+
+Service --> Controller: listaVantagens
+deactivate Service
+
+Controller --> UI: renderizarCatalogo(listaVantagens)
+deactivate Controller
+UI --> Aluno: Exibe grid com vantagens e custos
+deactivate UI
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+autonumber
+actor "Empresa Parceira" as Empresa
+boundary "View" as UI
+control "VantagemController" as Controller
+entity "VantagemService" as Service
+database "VantagemRepository" as DB
+
+Empresa -> UI: Preenche dados da vantagem\n(nome, desc, custo, foto)
+activate UI
+UI -> Controller: cadastrarVantagem(dadosVantagem)
+activate Controller
+
+Controller -> Service: validarESalvarVantagem(dadosVantagem)
+activate Service
+
+Service -> Service: validarCamposObrigatorios()
+Service -> DB: save(novaVantagem)
+activate DB
+DB --> Service: vantagemSalva
+deactivate DB
+
+Service --> Controller: sucesso
+deactivate Service
+
+Controller --> UI: atualizarTelaSucesso()
+deactivate Controller
+UI --> Empresa: Mensagem de "Vantagem Cadastrada"
+deactivate UI
+@enduml
