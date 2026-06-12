@@ -4,39 +4,54 @@ left to right direction
 
 actor "Usuario" as User
 
-node "Browser" {
-  component "SPA React/Vite" as SPA
-}
-
-node "API Spring Boot" {
-  component "Controllers REST" as REST
-  component "Camada Application\n(Fachadas e casos de uso)" as APP
-  component "Dominio\n(Modelos e Portas)" as DOM
-  component "Adaptadores JPA" as JPA
-  component "Seguranca JWT" as JWT
-  component "Publisher RabbitMQ" as PUB
-  component "Worker de notificacoes" as WORKER
-  component "Gerador QR Code\nZXing" as QR
-}
+component "SPA React/Vite" as SPA
+component "Controllers REST" as REST
+component "Camada Application" as APP
+component "Adaptadores JPA" as JPA
+component "Seguranca JWT" as JWT
+component "Publisher RabbitMQ" as PUB
+component "Worker de notificacoes" as WORKER
+component "Gerador QR Code" as QR
 
 database "PostgreSQL" as DB
 queue "RabbitMQ\nmoeda.notifications.email" as MQ
 cloud "EmailJS" as EMAIL
 cloud "ZapSender\nWhatsApp" as ZAP
 
+interface "IUsuarioUI\n<<fornecida>>" as IUI
+interface "IUsuarioAPI\n<<fornecida pela API>>" as IAPI
+interface "IAplicacao\n<<fornecida>>" as IAPP
+interface "IPersistencia\n<<fornecida pelo banco>>" as IDB
+interface "ITokenJWT\n<<fornecida>>" as ITOKEN
+interface "INotificacao\n<<fornecida>>" as INOTIF
+interface "IFilaAMQP\n<<fornecida pelo RabbitMQ>>" as IAMQP
+interface "IEmail\n<<fornecida pelo EmailJS>>" as IEMAIL
+interface "IWhatsApp\n<<fornecida pelo ZapSender>>" as IZAP
+interface "IQRCode\n<<fornecida>>" as IQR
+
 User --> SPA
-SPA --> REST : HTTP /api/v1
-REST --> JWT
-REST --> APP
-APP --> DOM
-APP --> JPA
-JPA --> DB
-APP --> QR : cupom unico
-APP --> PUB : evento apos commit
-PUB --> MQ
-MQ --> WORKER
-WORKER --> EMAIL : REST
-WORKER --> ZAP : REST
+SPA - IUI
+REST - IAPI
+APP - IAPP
+JWT - ITOKEN
+PUB - INOTIF
+QR - IQR
+DB - IDB
+MQ - IAMQP
+EMAIL - IEMAIL
+ZAP - IZAP
+
+SPA ..> IAPI : requer
+REST ..> ITOKEN : requer
+REST ..> IAPP : requer
+APP ..> IDB : requer
+JPA ..> IDB : requer
+APP ..> INOTIF : requer
+APP ..> IQR : requer
+PUB ..> IAMQP : requer
+WORKER ..> IAMQP : requer
+WORKER ..> IEMAIL : requer
+WORKER ..> IZAP : requer
 
 note bottom of MQ
   RabbitMQ separa o fluxo de negocio

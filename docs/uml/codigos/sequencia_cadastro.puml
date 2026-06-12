@@ -1,0 +1,39 @@
+@startuml
+!theme plain
+autonumber
+
+actor Usuario
+boundary "CadastroPage" as SPA
+participant "RegistroSolicitacao\n<<objeto requerido>>" as REQ
+control "ControleAutenticacao" as REST
+control "AutenticacaoFachada" as AUTH
+participant "UsuarioPersistenciaPort" as PORT
+participant "UsuarioPersistenciaAdapter" as ADAPTER
+database "PostgreSQL\nusuarios" as DB
+
+Usuario -> SPA : preenche perfil, nome, e-mail,\nsenha, instituicao e telefone
+SPA -> REQ : monta payload normalizado
+SPA -> REST : POST /api/v1/auth/registrar
+REST -> REST : @Valid valida contrato
+REST -> AUTH : registrar(...)
+AUTH -> AUTH : normaliza e-mail e valida perfil/instituicao
+AUTH -> PORT : salvarNovo(UsuarioCriacao)
+PORT -> ADAPTER : implementacao
+ADAPTER -> ADAPTER : normaliza telefone e resolve instituicao
+ADAPTER -> DB : INSERT INTO usuarios
+DB --> ADAPTER : usuario persistido
+ADAPTER --> AUTH : Usuario
+AUTH --> REST : token + sessao publica
+REST --> SPA : 200 OK
+SPA --> Usuario : abre painel autenticado
+
+alt contrato ou regra invalida
+  REST --> SPA : 400/422 com mensagem
+  SPA --> Usuario : mantem formulario e exibe erro
+end
+
+note over ADAPTER, DB
+  A tabela oficial de cadastro e usuarios.
+  tb_alunos e tb_empresas_parceiras sao legado inativo.
+end note
+@enduml

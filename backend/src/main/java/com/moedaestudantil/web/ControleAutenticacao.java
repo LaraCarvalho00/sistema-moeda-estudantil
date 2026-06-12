@@ -7,6 +7,9 @@ import com.moedaestudantil.domain.model.TipoPerfil;
 import com.moedaestudantil.infrastructure.security.ContaSessao;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,12 +43,17 @@ class ControleAutenticacao {
   }
 
   public record RegistroSolicitacao(
-      @Email @NotBlank String email,
-      @NotBlank String senha,
-      @NotBlank String nome,
-      TipoPerfil perfil,
+      @Email @NotBlank @Size(max = 180) String email,
+      @NotBlank @Size(min = 4, max = 72) String senha,
+      @NotBlank @Size(max = 200) String nome,
+      @NotNull TipoPerfil perfil,
       Long instituicaoId,
-      String telefone) {}
+      @Pattern(
+              regexp = "^\\s*(?:[+\\d().-][+\\d\\s().-]{7,31})?\\s*$",
+              message = "deve conter um telefone valido")
+          String telefone) {}
 
-  public record EntradaSolicitacao(@Email @NotBlank String email, @NotBlank String senha) {}
+  public record EntradaSolicitacao(
+      @Email @NotBlank @Size(max = 180) String email,
+      @NotBlank @Size(max = 72) String senha) {}
 }

@@ -1,30 +1,29 @@
 @startuml
+!theme plain
 autonumber
-actor "Empresa Parceira" as Empresa
-boundary "View" as UI
-control "VantagemController" as Controller
-entity "VantagemService" as Service
-database "VantagemRepository" as DB
 
-Empresa -> UI: Preenche dados da vantagem\n(nome, desc, custo, foto)
-activate UI
-UI -> Controller: cadastrarVantagem(dadosVantagem)
-activate Controller
+actor "Empresa Parceira" as Parceiro
+boundary "ParceiroVantagensPage" as SPA
+participant "VantCri\n<<objeto requerido>>" as REQ
+control "ControleVantagensResgate" as REST
+participant "VantagemPort" as PORT
+participant "VantagemAdapter" as ADAPTER
+database "PostgreSQL\nvantagens" as DB
 
-Controller -> Service: validarESalvarVantagem(dadosVantagem)
-activate Service
+Parceiro -> SPA : informa titulo, descricao e custo
+SPA -> REQ : monta payload
+SPA -> REST : POST /api/v1/parceiro/vantagens
+REST -> REST : @PreAuthorize + @Valid
+REST -> PORT : salvar(parceiroId, ...)
+PORT -> ADAPTER : implementacao
+ADAPTER -> DB : INSERT vantagem
+DB --> ADAPTER : vantagem persistida
+ADAPTER --> REST : Vantagem
+REST --> SPA : 201 Created
+SPA --> Parceiro : atualiza lista de ofertas
 
-Service -> Service: validarCamposObrigatorios()
-Service -> DB: save(novaVantagem)
-activate DB
-DB --> Service: vantagemSalva
-deactivate DB
-
-Service --> Controller: sucesso
-deactivate Service
-
-Controller --> UI: atualizarTelaSucesso()
-deactivate Controller
-UI --> Empresa: Mensagem de "Vantagem Cadastrada"
-deactivate UI
+alt contrato ou perfil invalido
+  REST --> SPA : 400/403/422
+  SPA --> Parceiro : exibe erro
+end
 @enduml

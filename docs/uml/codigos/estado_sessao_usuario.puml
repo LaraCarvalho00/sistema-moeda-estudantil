@@ -1,0 +1,20 @@
+@startuml
+!theme plain
+[*] --> Visitante
+
+Visitante --> Cadastrando : abrir cadastro
+Cadastrando --> Cadastrando : validacao falha
+Cadastrando --> Autenticado : cadastro persistido + JWT
+Visitante --> Autenticando : abrir login
+Autenticando --> Autenticando : credenciais invalidas
+Autenticando --> Autenticado : login valido
+
+state Autenticado {
+  [*] --> Painel
+  Painel --> Operando : abrir funcionalidade permitida
+  Operando --> Painel : concluir ou voltar
+}
+
+Autenticado --> Visitante : sair
+Autenticado --> Visitante : token ausente ou expirado
+@enduml

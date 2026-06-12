@@ -21,13 +21,24 @@ export function CadastroPage() {
   });
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [carregandoInstituicoes, setCarregandoInstituicoes] = useState(true);
 
   useEffect(() => {
     void (async () => {
-      const list = await instituicoesFachada.listar();
-      setInst(list);
-      if (list[0]) {
-        setForm((f) => ({ ...f, instituicaoId: list[0].id }));
+      try {
+        const list = await instituicoesFachada.listar();
+        setInst(list);
+        if (list[0]) {
+          setForm((f) => ({ ...f, instituicaoId: list[0].id }));
+        }
+      } catch (e) {
+        setErro(
+          e instanceof Error
+            ? e.message
+            : "Nao foi possivel carregar as instituicoes.",
+        );
+      } finally {
+        setCarregandoInstituicoes(false);
       }
     })();
   }, []);
@@ -101,7 +112,7 @@ export function CadastroPage() {
             </select>
           </label>
 
-          {perfil !== "PARCEIRO" && inst.length > 0 && (
+          {perfil !== "PARCEIRO" && (
             <label className="block text-sm font-bold text-gray-600">
               Sua Instituicao
               <select
@@ -113,8 +124,15 @@ export function CadastroPage() {
                     instituicaoId: Number(e.target.value),
                   }))
                 }
-                disabled={enviando}
+                disabled={enviando || carregandoInstituicoes || inst.length === 0}
+                required
               >
+                {carregandoInstituicoes && (
+                  <option value={0}>Carregando instituicoes...</option>
+                )}
+                {!carregandoInstituicoes && inst.length === 0 && (
+                  <option value={0}>Nenhuma instituicao disponivel</option>
+                )}
                 {inst.map((i) => (
                   <option key={i.id} value={i.id}>
                     {i.nome}
@@ -157,6 +175,8 @@ export function CadastroPage() {
               placeholder="Ex: 31999998888"
               value={form.telefone}
               onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
+              inputMode="tel"
+              autoComplete="tel"
               disabled={enviando}
             />
           </label>
@@ -184,7 +204,11 @@ export function CadastroPage() {
 
           <button
             type="submit"
-            disabled={enviando}
+            disabled={
+              enviando ||
+              (perfil !== "PARCEIRO" &&
+                (carregandoInstituicoes || inst.length === 0))
+            }
             className="w-full rounded-full bg-[#820AD1] py-3.5 font-bold text-white shadow-md transition-all hover:bg-[#6D08B1] active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {enviando ? "Criando conta..." : "Finalizar cadastro"}

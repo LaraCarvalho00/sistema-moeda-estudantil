@@ -1,0 +1,30 @@
+@startuml
+!theme plain
+start
+:Abrir cadastro;
+:Carregar instituicoes;
+if (Instituicoes carregadas?) then (sim)
+  :Preencher dados e perfil;
+  if (Perfil e parceiro?) then (sim)
+    :Enviar sem instituicao;
+  else (nao)
+    :Selecionar instituicao obrigatoria;
+  endif
+  :Validar formulario;
+  if (Contrato valido?) then (sim)
+    :Normalizar e-mail e telefone;
+    :Persistir em usuarios;
+    if (Persistencia concluida?) then (sim)
+      :Emitir JWT;
+      :Abrir painel;
+    else (nao)
+      :Exibir erro de negocio;
+    endif
+  else (nao)
+    :Exibir erros dos campos;
+  endif
+else (nao)
+  :Bloquear envio e exibir falha;
+endif
+stop
+@enduml

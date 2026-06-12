@@ -11,10 +11,10 @@ object "usuarios:UsuarioPersistenciaPort" as usuarios
 object "transacoes:TransacaoPort" as transacoes
 object "notificacao:NotificacaoAplicada" as notificacao
 object "qr:CupomQrCodeServico" as qr
-queue "rabbit:RabbitMQ" as rabbit
+object "rabbit:RabbitMQ\n<<fila>>" as rabbit
 object "worker:RabbitNotificationWorker" as worker
-cloud "emailjs:EmailJS" as emailjs
-actor "parceiro:Empresa Parceira" as parceiro
+object "emailjs:EmailJS\n<<servico externo>>" as emailjs
+object "parceiro:Empresa Parceira" as parceiro
 
 aluno --> spa : 1. seleciona vantagem
 spa --> controle : 2. POST /alunos/resgatar-vantagem/{id}

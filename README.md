@@ -491,6 +491,7 @@ O Spring **não** lê `.env` automaticamente; use shell, IDE ou o provedor de *d
 
 ## Documentação UML
 
+- [Relatorio final da revisao de 12/06/2026](docs/RELATORIO_REVISAO_FINAL.md)
 - [Plano de entregas Lab03, Release 02 e Release 03](docs/plano_labs_release02.md)
 - [Templates EmailJS e QR Code de cupom](docs/emailjs_templates.md)
 - [Histórias de usuário](docs/uml/historias_de_usuario.md)

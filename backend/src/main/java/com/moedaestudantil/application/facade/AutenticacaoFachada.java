@@ -41,12 +41,19 @@ public class AutenticacaoFachada {
       TipoPerfil perfil,
       Long instituicaoId,
       String telefone) {
-    if (repositorio.existsByEmail(email.trim().toLowerCase())) {
+    String emailNormalizado = email.trim().toLowerCase();
+    if (repositorio.existsByEmail(emailNormalizado)) {
       throw new RegraDeNegocio("E-mail já cadastrado.");
+    }
+    if (perfil == TipoPerfil.PARCEIRO && instituicaoId != null) {
+      throw new RegraDeNegocio("Parceiro nao vincula instituicao de ensino no cadastro.");
+    }
+    if (perfil != TipoPerfil.PARCEIRO && instituicaoId == null) {
+      throw new RegraDeNegocio("Instituicao e obrigatoria para aluno e professor.");
     }
     var c =
         UsuarioCriacao.builder()
-            .email(email.trim().toLowerCase())
+            .email(emailNormalizado)
             .telefone(telefone)
             .hashSenha(passwordEncoder.encode(senha))
             .nome(nome.trim())
