@@ -59,6 +59,12 @@ app:
       enabled: ${ZAPSENDER_ENABLED:false}
       api-url: ${ZAPSENDER_API_URL:}
       token: ${ZAPSENDER_TOKEN:}
+    whatsapp-meta:
+      enabled: ${WHATSAPP_ENABLED:false}
+      access-token: ${META_ACCESS_TOKEN:}
+      business-account-id: ${META_BUSINESS_ACCOUNT_ID:}
+      phone-number-id: ${META_PHONE_NUMBER_ID:}
+      phone-number: ${META_PHONE_NUMBER:}
 
 server:
   port: ${PORT:8080}
