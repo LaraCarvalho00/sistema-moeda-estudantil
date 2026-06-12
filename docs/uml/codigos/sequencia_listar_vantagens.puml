@@ -1,29 +1,21 @@
 @startuml
+!theme plain
 autonumber
+
 actor Aluno
-boundary "View" as UI
-control "VantagemController" as Controller
-entity "VantagemService" as Service
-database "VantagemRepository" as DB
+boundary "MarketplacePage" as SPA
+control "ControleVantagensResgate" as REST
+participant "VantagemPort" as PORT
+participant "VantagemAdapter" as ADAPTER
+database "PostgreSQL\nvantagens + usuarios" as DB
 
-Aluno -> UI: Acessa catálogo de vantagens
-activate UI
-UI -> Controller: listarVantagensAtivas()
-activate Controller
-
-Controller -> Service: obterTodasVantagens()
-activate Service
-
-Service -> DB: findAll()
-activate DB
-DB --> Service: listaVantagens
-deactivate DB
-
-Service --> Controller: listaVantagens
-deactivate Service
-
-Controller --> UI: renderizarCatalogo(listaVantagens)
-deactivate Controller
-UI --> Aluno: Exibe grid com vantagens e custos
-deactivate UI
+Aluno -> SPA : abre marketplace
+SPA -> REST : GET /api/v1/vantagens?page=...
+REST -> PORT : listarTodas(pageable)
+PORT -> ADAPTER : implementacao
+ADAPTER -> DB : SELECT vantagens e parceiro
+DB --> ADAPTER : pagina de vantagens
+ADAPTER --> REST : Page<Vantagem>
+REST --> SPA : 200 OK
+SPA --> Aluno : exibe catalogo ou estado vazio
 @enduml

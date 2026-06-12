@@ -1,29 +1,27 @@
 @startuml
+!theme plain
 autonumber
-actor "Usuário\n(Prof/Aluno)" as Usuario
-boundary "View" as UI
-control "ExtratoController" as Controller
-entity "TransacaoService" as Service
-database "TransacaoRepository" as DB
 
-Usuario -> UI: Acessa página de extrato
-activate UI
-UI -> Controller: solicitarExtrato(idUsuario)
-activate Controller
+actor "Aluno ou Professor" as Usuario
+boundary "ExtratoPage" as SPA
+control "ControleMoedasERelatorio" as REST
+control "TransacaoFachada" as APP
+participant "TransacaoPort" as PORT
+participant "TransacaoAdapter" as ADAPTER
+database "PostgreSQL\ntransacoes" as DB
 
-Controller -> Service: buscarHistoricoTransacoes(idUsuario)
-activate Service
-
-Service -> DB: findByUsuarioId(idUsuario)
-activate DB
-DB --> Service: listaTransacoes
-deactivate DB
-
-Service --> Controller: listaFormatada
-deactivate Service
-
-Controller --> UI: exibirDadosExtrato(listaFormatada)
-deactivate Controller
-UI --> Usuario: Apresenta tabela com o extrato
-deactivate UI
+Usuario -> SPA : abre extrato
+SPA -> REST : GET /api/v1/transacoes/extrato?page=...
+REST -> REST : identifica perfil do JWT
+alt professor
+  REST -> APP : extratoProfessor(usuarioId, page)
+else aluno
+  REST -> APP : extratoAluno(usuarioId, page)
+end
+APP -> PORT : listar extrato paginado
+PORT -> ADAPTER : implementacao
+ADAPTER -> DB : SELECT transacoes do usuario
+DB --> ADAPTER : pagina de transacoes
+ADAPTER --> SPA : Page<TransacaoResumo>
+SPA --> Usuario : exibe historico ou estado vazio
 @enduml

@@ -55,6 +55,7 @@ vantagens ||--o{ transacoes : resgate
 note right of usuarios
   Campos marcados com * sao requeridos.
   telefone e opcional, usado para ZapSender.
+  Esta e a tabela oficial de cadastro.
 end note
 
 @enduml
